@@ -26,8 +26,10 @@ func main() {
 		fmt.Println("Error reading image:", err)
 		os.Exit (1)
 	}
+	fmt.Println("source image read")
 	
 	grad := sgrad.Fdgrad(src)
+	fmt.Println("gradient image computed")
 	
 	hist := shist.Hist(grad, *k)
 	

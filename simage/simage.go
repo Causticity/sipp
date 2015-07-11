@@ -11,7 +11,7 @@ import (
 	)
 
 type Sippimage struct {
-	img *image.Gray
+	Img *image.Gray
 }
 
 var grayType = reflect.TypeOf(new(image.Gray))
@@ -33,7 +33,7 @@ func Read(in *string) (img *Sippimage, err error) {
 	}
 		
 	img = new(Sippimage)
-	img.img = m.(*image.Gray)
+	img.Img = m.(*image.Gray)
 	return
 }
 
