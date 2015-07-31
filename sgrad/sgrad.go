@@ -37,7 +37,7 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 	// Drive over the dst image
 	// grad[x,y] = complex(src[x+1,y+1] - src[x,y], src[x+1,y]-src[x,y+1])
 	// loop over dest scanlines
-    gradStride := grad.Rect.Dy()
+    gradStride := grad.Rect.Dx()
 	for line := 0; line < grad.Rect.Dy(); line++ {
 		// Set the following slice indices into the src:
 		cur := src.Img.PixOffset(0, line)
@@ -50,16 +50,18 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 			re := float32(src.Img.Pix[rightdown]) - float32(src.Img.Pix[cur])
 			im := float32(src.Img.Pix[right]) - float32(src.Img.Pix[down])
 			grad.Pix[dsti] = complex(re, im)
-			modsq := float64(re*re + im*im)
-			grad.MaxMod = math.Max(modsq, grad.MaxMod)
+			modsq := float64(re)*float64(re) + float64(im)*float64(im)
+			if modsq > grad.MaxMod {
+				grad.MaxMod = modsq
+			}
 			cur++
 			rightdown++
 			right++
 			down++
 		}
-		// take the sqrt of the max
-		grad.MaxMod = math.Sqrt(grad.MaxMod)
 	}
+	// take the sqrt of the max
+	grad.MaxMod = math.Sqrt(grad.MaxMod)
 
 	return
 }
