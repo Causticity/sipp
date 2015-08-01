@@ -45,6 +45,14 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 }
 
 func (hist *Sipphist) Entropy() (ent float64) {
+    total := float64(len(hist.grad.Pix))
+	for _, bin := range hist.bin {
+		if bin != 0 {
+			p := float64(bin) / total
+			ent += p * math.Log2(p)
+		}
+	}
+	ent *= -1
 	return
 }
 

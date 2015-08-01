@@ -32,6 +32,7 @@ func main() {
 	fmt.Println("gradient image computed")
 	
 	hist := shist.Hist(grad, *k)
+	fmt.Println("Entropy of the image:", hist.Entropy())
 	
 	rhist := hist.Render()
 		
