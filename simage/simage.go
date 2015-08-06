@@ -5,7 +5,7 @@ import (
 	// Package image/png is not used explicitly in the code below,
 	// but is imported for its initialization side-effect, which allows
 	// image.Decode to understand PNG formatted images.
-	_ "image/png"
+	"image/png"
 	"os"
 	"reflect"
 	)
@@ -37,6 +37,10 @@ func Read(in *string) (img *Sippimage, err error) {
 	return
 }
 
-func (img *Sippimage) Write(out *string) (err error) {
-	return
+func (img *Sippimage) Write(out *string) error {
+	writer, err := os.Create(*out) 
+	if err != nil {
+		return err
+	}
+	return png.Encode(writer, img.Img)
 }

@@ -27,12 +27,19 @@ func main() {
 		os.Exit (1)
 	}
 	fmt.Println("source image read")
+/*
+	err = src.Write(out)
+	if err != nil {
+		fmt.Println("Error rewriting input image:", err)
+		os.Exit (1)
+	}
+*/	
 	
 	grad := sgrad.Fdgrad(src)
 	fmt.Println("gradient image computed")
 	
 	hist := shist.Hist(grad, *k)
-	fmt.Println("Entropy of the image:", hist.Entropy())
+	fmt.Println("Entropy of the gradient image:", hist.Entropy())
 	
 	rhist := hist.Render()
 		

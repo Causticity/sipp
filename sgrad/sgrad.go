@@ -33,6 +33,7 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 	fmt.Println("source image rect:<", srect, ">")
 	fmt.Println("source image stride:", src.Img.Stride)
 	fmt.Println("gradient image rect:<", grad.Rect, ">")
+	fmt.Println("Gradient image no. of pixels:<", len(grad.Pix), ">")
 	
 	// Drive over the dst image
 	// grad[x,y] = complex(src[x+1,y+1] - src[x,y], src[x+1,y]-src[x,y+1])
@@ -60,8 +61,46 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 			down++
 		}
 	}
-	// take the sqrt of the max
 	grad.MaxMod = math.Sqrt(grad.MaxMod)
 
+	return
+}
+
+func (grad *Gradimage) Render() (re, im *Sippimage) {
+	// compute max excursions of the real and imag parts
+	var minreal float32 = math.MaxFloat32
+	var minimag float32 = math.MaxFloat32
+	var maxreal float32 = -math.MaxFloat32
+	var maximag float32 = -math.MaxFloat32
+	for _, pix := range grad.Pix {
+		re := real(pix)
+		im := imag(pix)
+		if re < minreal {
+			minreal = re
+		}
+		if re > maxreal {
+			maxreal = re
+		}
+		if im < minimag {
+			minimag = im
+		}
+		if im > maximag {
+			maximag = im
+		}
+	}
+	// compute scale and offset for each image
+	rscale := 255.0 / (maxreal - minreal)
+	iscale := 255.0 / (maximag - minimag)
+	re = new(Sippimage)
+	re.Img = image.NewGray(grad.Rect)
+	im = new(Sippimage)
+	im.Img = image.NewGray(grad.Rect)
+	// scan the complex image, generating the two renderings
+	for index, pix := range grad.Pix {
+		r := real(pix)
+		i := imag(pix)
+		re.Img.Pix[index] = uint8((r - minreal)*rscale)
+		im.Img.Pix[index] = uint8((i - minimag)*iscale)
+	}
 	return
 }
