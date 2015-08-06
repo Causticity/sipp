@@ -94,7 +94,7 @@ func (hist *Sipphist) RenderSuppressed() (rnd *Sippimage) {
 	hist.Suppress()
 	stride := 2*hist.k+1
 	var scale float64 = 255.0 / hist.maxSuppressed
-	fmt.Println("Render scale factor:", scale)
+	fmt.Println("Suppressed Render scale factor:", scale)
 	rnd = new(Sippimage)
 	rnd.Img = image.NewGray(image.Rect(0,0,stride,stride))
 	for index, val := range hist.suppressed {
@@ -105,14 +105,18 @@ func (hist *Sipphist) RenderSuppressed() (rnd *Sippimage) {
 
 func (hist *Sipphist) Render() (rnd *Sippimage) {
 	// Here we will generate an 8-bit output image of the same size as the
-	// histogram, scaled to use the full dynamic range of the image format.
+	// histogram, clipped to 255.
 	stride := 2*hist.k+1
-	var scale float64 = 255.0 / float64(hist.max)
-	fmt.Println("Render scale factor:", scale)
+	//var scale float64 = 255.0 / float64(hist.max)
+	//fmt.Println("Render scale factor:", scale)
 	rnd = new(Sippimage)
 	rnd.Img = image.NewGray(image.Rect(0,0,stride,stride))
 	for index, val := range hist.bin {
-		rnd.Img.Pix[index] = uint8(float64(val) * scale)
+		//rnd.Img.Pix[index] = uint8(float64(val) * scale)
+		if val > 255 {
+			val = 255
+		}
+		rnd.Img.Pix[index] = uint8(val)
 	}
 	return
 }
