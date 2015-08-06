@@ -13,7 +13,7 @@ import (
 )
 
 type Gradimage struct {
-	Pix []complex64
+	Pix []complex128
 	Rect image.Rectangle
 	MaxMod float64
 }
@@ -27,7 +27,7 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 	srect := src.Img.Bounds()
 	grad = new(Gradimage)
 	grad.Rect = image.Rect(0,0,srect.Dx()-1,srect.Dy()-1)
-	grad.Pix = make([]complex64, grad.Rect.Dx()*grad.Rect.Dy())
+	grad.Pix = make([]complex128, grad.Rect.Dx()*grad.Rect.Dy())
 	grad.MaxMod = 0
 	
 	fmt.Println("source image rect:<", srect, ">")
@@ -48,10 +48,11 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 		dstMin := line*gradStride
 		dstMax := dstMin+gradStride
 		for dsti := dstMin; dsti < dstMax; dsti++ {
-			re := float32(src.Img.Pix[rightdown]) - float32(src.Img.Pix[cur])
-			im := float32(src.Img.Pix[right]) - float32(src.Img.Pix[down])
+			re := float64(src.Img.Pix[rightdown]) - float64(src.Img.Pix[cur])
+			im := float64(src.Img.Pix[right]) - float64(src.Img.Pix[down])
 			grad.Pix[dsti] = complex(re, im)
-			modsq := float64(re)*float64(re) + float64(im)*float64(im)
+			//modsq := float64(re)*float64(re) + float64(im)*float64(im)
+			modsq := re*re + im*im
 			if modsq > grad.MaxMod {
 				grad.MaxMod = modsq
 			}
@@ -68,10 +69,10 @@ func Fdgrad(src *Sippimage) (grad *Gradimage) {
 
 func (grad *Gradimage) Render() (re, im *Sippimage) {
 	// compute max excursions of the real and imag parts
-	var minreal float32 = math.MaxFloat32
-	var minimag float32 = math.MaxFloat32
-	var maxreal float32 = -math.MaxFloat32
-	var maximag float32 = -math.MaxFloat32
+	var minreal float64 = math.MaxFloat64
+	var minimag float64 = math.MaxFloat64
+	var maxreal float64 = -math.MaxFloat64
+	var maximag float64 = -math.MaxFloat64
 	for _, pix := range grad.Pix {
 		re := real(pix)
 		im := imag(pix)

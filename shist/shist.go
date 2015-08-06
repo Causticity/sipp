@@ -35,8 +35,8 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
     factor := float64(k) / grad.MaxMod
     fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for _, pixel := range grad.Pix {
-		u := factor*float64(real(pixel)) + float64(k)
-		v := factor*float64(imag(pixel)) + float64(k)
+		u := factor*real(pixel) + float64(k)
+		v := factor*imag(pixel) + float64(k)
 		histIndex := int(v)*stride + int(u)
 		hist.bin[histIndex]++
 		if hist.bin[histIndex] > hist.max {
