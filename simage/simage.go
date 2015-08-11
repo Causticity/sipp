@@ -17,6 +17,7 @@ type Sippimage interface {
 	Val(x, y int) float64
 	Stride() int
 	Step() int
+	Bpp() int
 	Write(out *string) error
 }
 
@@ -40,6 +41,10 @@ func (sg *SippGray) Step() int {
 	return 1
 }
 
+func (sg *SippGray) Bpp() int {
+	return 8
+}
+
 type SippGray16 struct {
 	*image.Gray16
 }
@@ -59,6 +64,10 @@ func (sg16 *SippGray16) Stride() int {
 
 func (sg16 *SippGray16) Step() int {
 	return 2
+}
+
+func (sg *SippGray16) Bpp() int {
+	return 16
 }
 
 var grayType = reflect.TypeOf(new(image.Gray))

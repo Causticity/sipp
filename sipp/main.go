@@ -15,7 +15,7 @@ import (
 func main() {
 	var in = flag.String("in", "", "input image file; must be grayscale png")
 	var out = flag.String("out", "", "output image file prefix")
-	var k = flag.Int("K", 63, "Number of bins to scale the max radius to. "+
+	var k = flag.Int("K", 255, "Number of bins to scale the max radius to. "+
 							  "The histogram will be 2K+1 bins on a side.\n"+
 							  "         This is used only for 16-bit images. "+
 							  "8-bit images always use a 511x511 histogram,\n"+
@@ -30,6 +30,11 @@ func main() {
 		os.Exit (1)
 	}
 	fmt.Println("source image read")
+	
+	if src.Bpp() == 8 {
+		*k = 255
+		fmt.Println("Image is 8-bit. K forced to 255.")
+	}
 	
 	grad := sgrad.Fdgrad(src)
 	fmt.Println("gradient image computed")
