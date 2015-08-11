@@ -35,9 +35,7 @@ func Fdgrad(src Sippimage) (grad *Gradimage) {
 	fmt.Println("gradient image rect:<", grad.Rect, ">")
 	fmt.Println("Gradient image no. of pixels:<", len(grad.Pix), ">")
 	
-	// Drive over the dst image
 	// grad[x,y] = complex(src[x+1,y+1] - src[x,y], src[x+1,y]-src[x,y+1])
-	// loop over dest scanlines
 	dsti := 0
 	for y := 0; y < grad.Rect.Dy(); y++ {
 		for x := 0; x < grad.Rect.Dx(); x++ {

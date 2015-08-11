@@ -33,14 +33,14 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	
 	// Walk through the image, computing the bin address from the gradient 
 	// values. 
-    //factor := float64(k) / grad.MaxMod
-    //fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
+	var factor float64 = 1.0
+	if grad.MaxMod > float64(k) {
+	    factor = float64(k) / grad.MaxMod
+	}
+	fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for _, pixel := range grad.Pix {
-		//u := factor*real(pixel) + float64(k)
-		//v := factor*imag(pixel) + float64(k)
-		u := int(real(pixel)) + k
-		v := int(imag(pixel)) + k
-		//histIndex := int(v)*stride + int(u)
+		u := int(factor*real(pixel)) + k
+		v := int(factor*imag(pixel)) + k
 		histIndex := v*stride + u
 		hist.bin[histIndex]++
 		if hist.bin[histIndex] > hist.max {
@@ -118,7 +118,6 @@ func (hist *Sipphist) Render() Sippimage {
 	rnd.Gray = image.NewGray(image.Rect(0,0,stride,stride))
 	rndPix := rnd.Pix()
 	for index, val := range hist.bin {
-		//rnd.Img.Pix[index] = uint8(float64(val) * scale)
 		if val > 255 {
 			val = 255
 		}
