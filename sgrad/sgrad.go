@@ -38,31 +38,17 @@ func Fdgrad(src Sippimage) (grad *Gradimage) {
 	// Drive over the dst image
 	// grad[x,y] = complex(src[x+1,y+1] - src[x,y], src[x+1,y]-src[x,y+1])
 	// loop over dest scanlines
-    gradStride := grad.Rect.Dx()
-    pix := src.Pix()
-    step := src.Step()
-	for line := 0; line < grad.Rect.Dy(); line++ {
-		// Set the following slice indices into the src:
-		cur := src.PixOffset(0, line)
-		rightdown := src.PixOffset(1, line+1)
-		right := src.PixOffset(1, line)
-		down := src.PixOffset(0, line+1)
-		dstMin := line*gradStride
-		dstMax := dstMin+gradStride
-		for dsti := dstMin; dsti < dstMax; dsti++ {
-			// This is not polymorphic access. Add a method that returns the
-			// pixel value as a float64 and just use the indices
-			re := float64(pix[rightdown]) - float64(pix[cur])
-			im := float64(pix[right]) - float64(pix[down])
+	dsti := 0
+	for y := 0; y < grad.Rect.Dy(); y++ {
+		for x := 0; x < grad.Rect.Dx(); x++ {
+			re := src.Val(x+1,y+1) - src.Val(x,y)
+			im := src.Val(x+1,y) - src.Val(x,y+1)
 			grad.Pix[dsti] = complex(re, im)
+			dsti++
 			modsq := re*re + im*im
 			if modsq > grad.MaxMod {
 				grad.MaxMod = modsq
 			}
-			cur += step
-			rightdown += step
-			right += step
-			down += step
 		}
 	}
 	grad.MaxMod = math.Sqrt(grad.MaxMod)
