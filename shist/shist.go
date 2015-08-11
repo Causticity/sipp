@@ -21,6 +21,7 @@ type Sipphist struct {
 }
 
 func Hist(grad *Gradimage, k int) (hist *Sipphist) {
+	fmt.Println("histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
 	hist = new(Sipphist)
 	hist.grad = grad
@@ -32,12 +33,15 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	
 	// Walk through the image, computing the bin address from the gradient 
 	// values. 
-    factor := float64(k) / grad.MaxMod
-    fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
+    //factor := float64(k) / grad.MaxMod
+    //fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for _, pixel := range grad.Pix {
-		u := factor*real(pixel) + float64(k)
-		v := factor*imag(pixel) + float64(k)
-		histIndex := int(v)*stride + int(u)
+		//u := factor*real(pixel) + float64(k)
+		//v := factor*imag(pixel) + float64(k)
+		u := int(real(pixel)) + k
+		v := int(imag(pixel)) + k
+		//histIndex := int(v)*stride + int(u)
+		histIndex := v*stride + u
 		hist.bin[histIndex]++
 		if hist.bin[histIndex] > hist.max {
 			hist.max = hist.bin[histIndex]
@@ -88,35 +92,37 @@ func (hist *Sipphist) Suppress() {
 	fmt.Println("Distance suppression complete; max suppressed value:", hist.maxSuppressed)
 }
 
-func (hist *Sipphist) RenderSuppressed() (rnd *Sippimage) {
+func (hist *Sipphist) RenderSuppressed() Sippimage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
 	stride := 2*hist.k+1
 	var scale float64 = 255.0 / hist.maxSuppressed
 	fmt.Println("Suppressed Render scale factor:", scale)
-	rnd = new(Sippimage)
-	rnd.Img = image.NewGray(image.Rect(0,0,stride,stride))
+	rnd := new(SippGray)
+	rnd.Gray = image.NewGray(image.Rect(0,0,stride,stride))
+	rndPix := rnd.Pix()
 	for index, val := range hist.suppressed {
-		rnd.Img.Pix[index] = uint8(val * scale)
+		rndPix[index] = uint8(val * scale)
 	}
-	return
+	return rnd
 }
 
-func (hist *Sipphist) Render() (rnd *Sippimage) {
+func (hist *Sipphist) Render() Sippimage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
 	stride := 2*hist.k+1
 	//var scale float64 = 255.0 / float64(hist.max)
 	//fmt.Println("Render scale factor:", scale)
-	rnd = new(Sippimage)
-	rnd.Img = image.NewGray(image.Rect(0,0,stride,stride))
+	rnd := new(SippGray)
+	rnd.Gray = image.NewGray(image.Rect(0,0,stride,stride))
+	rndPix := rnd.Pix()
 	for index, val := range hist.bin {
 		//rnd.Img.Pix[index] = uint8(float64(val) * scale)
 		if val > 255 {
 			val = 255
 		}
-		rnd.Img.Pix[index] = uint8(val)
+		rndPix[index] = uint8(val)
 	}
-	return
+	return rnd
 }

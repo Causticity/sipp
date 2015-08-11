@@ -15,13 +15,16 @@ import (
 func main() {
 	var in = flag.String("in", "", "input image file; must be grayscale png")
 	var out = flag.String("out", "", "output image file prefix")
-	var k = flag.Int("K", 63, "Number of bins to scale the max radius to.\nThe histogram will be 2K+1 bins on a side")
+	var k = flag.Int("K", 63, "Number of bins to scale the max radius to. "+
+							  "The histogram will be 2K+1 bins on a side.\n"+
+							  "         This is used only for 16-bit images. "+
+							  "8-bit images always use a 511x511 histogram,\n"+
+							  "         as that covers the entire possible space.")
 	flag.Parse()
 	fmt.Println("input file:<", *in, ">")
 	fmt.Println("output file prefix:<", *out, ">")
-	fmt.Println("histogram edge size:", (*k*2+1))
 
-	var src, err = simage.Read(in)
+	src, err := simage.Read(in)
 	if err != nil {
 		fmt.Println("Error reading image:", err)
 		os.Exit (1)

@@ -10,37 +10,103 @@ import (
 	"reflect"
 	)
 
-type Sippimage struct {
-	Img *image.Gray
+type Sippimage interface {
+	image.Image
+	PixOffset(x, y int) int
+	Pix() []uint8
+	Val(x, y int) float64
+	Stride() int
+	Step() int
+	Write(out *string) error
+}
+
+type SippGray struct {
+	*image.Gray
+}
+
+func (sg *SippGray) Pix() []uint8 {
+	return sg.Gray.Pix
+}
+
+func (sg *SippGray) Val(x, y int) float64 {
+	return float64(sg.Gray.Pix[sg.PixOffset(x,y)])
+}
+
+func (sg *SippGray) Stride() int {
+	return sg.Gray.Stride
+}
+
+func (sg *SippGray) Step() int {
+	return 1
+}
+
+type SippGray16 struct {
+	*image.Gray16
+}
+
+func (sg16 *SippGray16) Pix() []uint8 {
+	return sg16.Gray16.Pix
+}
+
+func (sg16 *SippGray16) Val(x, y int) float64 {
+	i := sg16.PixOffset(x,y)
+	return float64(uint16(sg16.Gray16.Pix[i+0])<<8 | uint16(sg16.Gray16.Pix[i+1]))
+}
+
+func (sg16 *SippGray16) Stride() int {
+	return sg16.Gray16.Stride
+}
+
+func (sg16 *SippGray16) Step() int {
+	return 2
 }
 
 var grayType = reflect.TypeOf(new(image.Gray))
+var gray16Type = reflect.TypeOf(new(image.Gray16))
 
-func Read(in *string) (img *Sippimage, err error) {
+func Read(in *string) (Sippimage, error) {
 	reader, err := os.Open(*in)
 	if err != nil {
 		return nil, err
 	}
 
 	defer reader.Close()
-	m, _, err := image.Decode(reader)
+	im, _, err := image.Decode(reader)
 	if err != nil {
 		return nil, err
 	}
 	
-	if reflect.TypeOf(m) != grayType {
-		panic("input image must be grayscale!")
+	t := reflect.TypeOf(im)
+	
+	if t == grayType {
+		g := new(SippGray)
+		g.Gray = im.(*image.Gray)
+		return g, err
 	}
+	
+	if t == gray16Type {
+		g16 := new(SippGray16)
+		g16.Gray16 = im.(*image.Gray16)
+		return g16, err
+	}
+	
+	panic("input image must be 8-bit or 16-bit grayscale!")
 		
-	img = new(Sippimage)
-	img.Img = m.(*image.Gray)
-	return
+	return nil, err
 }
 
-func (img *Sippimage) Write(out *string) error {
+func (img *SippGray) Write(out *string) error {
+	return sippWrite(img, out)
+}
+
+func (img *SippGray16) Write(out *string) error {
+	return sippWrite(img, out)
+}
+
+func sippWrite(img image.Image, out *string) error { 
 	writer, err := os.Create(*out) 
 	if err != nil {
 		return err
 	}
-	return png.Encode(writer, img.Img)
+	return png.Encode(writer, img)
 }
