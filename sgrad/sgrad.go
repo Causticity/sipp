@@ -31,7 +31,6 @@ func Fdgrad(src Sippimage) (grad *Gradimage) {
 	grad.MaxMod = 0
 	
 	fmt.Println("source image rect:<", srect, ">")
-	fmt.Println("source image stride:", src.Stride())
 	fmt.Println("gradient image rect:<", grad.Rect, ">")
 	fmt.Println("Gradient image no. of pixels:<", len(grad.Pix), ">")
 	

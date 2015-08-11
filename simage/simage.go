@@ -15,8 +15,6 @@ type Sippimage interface {
 	PixOffset(x, y int) int
 	Pix() []uint8
 	Val(x, y int) float64
-	Stride() int
-	Step() int
 	Bpp() int
 	Write(out *string) error
 }
@@ -31,14 +29,6 @@ func (sg *SippGray) Pix() []uint8 {
 
 func (sg *SippGray) Val(x, y int) float64 {
 	return float64(sg.Gray.Pix[sg.PixOffset(x,y)])
-}
-
-func (sg *SippGray) Stride() int {
-	return sg.Gray.Stride
-}
-
-func (sg *SippGray) Step() int {
-	return 1
 }
 
 func (sg *SippGray) Bpp() int {
@@ -56,14 +46,6 @@ func (sg16 *SippGray16) Pix() []uint8 {
 func (sg16 *SippGray16) Val(x, y int) float64 {
 	i := sg16.PixOffset(x,y)
 	return float64(uint16(sg16.Gray16.Pix[i+0])<<8 | uint16(sg16.Gray16.Pix[i+1]))
-}
-
-func (sg16 *SippGray16) Stride() int {
-	return sg16.Gray16.Stride
-}
-
-func (sg16 *SippGray16) Step() int {
-	return 2
 }
 
 func (sg *SippGray16) Bpp() int {
