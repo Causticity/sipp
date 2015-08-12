@@ -1,6 +1,6 @@
+// Package sgrad provides facilities for the computation and rendering of
+// a finite-difference gradient image from a source Sippimage.
 package sgrad
-
-// Create a gradient image from a source image.
 
 import (
 	"image"
@@ -12,9 +12,14 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
+// Gradimage stores a gradient image with a complex value at each pixel.
 type Gradimage struct {
+	// The "pixel" data.
 	Pix []complex128
+	// The rectangle defining the bounds of the image.
 	Rect image.Rectangle
+	// The maximum modulus value that occurs in this image. This is useful
+	// when computing a histogram of the modulus value.
 	MaxMod float64
 }
 
@@ -53,7 +58,11 @@ func Fdgrad(src Sippimage) (grad *Gradimage) {
 	return
 }
 
+// Render the real and imaginary parts of the gradient image as separate 
+// 8-bit grayscale images.
 func (grad *Gradimage) Render() (Sippimage, Sippimage) {
+	// TODO: Store these in Gradimage and compute them as the image is
+	// 		 generated.
 	// compute max excursions of the real and imag parts
 	var minreal float64 = math.MaxFloat64
 	var minimag float64 = math.MaxFloat64

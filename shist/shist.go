@@ -1,3 +1,6 @@
+// Package shist provides functions for computing and rendering a 2-dimensional
+// histogram of values of a complex gradient image, as well as a 2D Entropy
+// calculation based on the histogram.
 package shist
 
 import (
@@ -11,6 +14,8 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
+// Sipphist is a 2-dimensional histogram of the values in a complex gradient
+// image.
 type Sipphist struct {
 	grad *Gradimage
 	k int
@@ -20,6 +25,8 @@ type Sipphist struct {
 	maxSuppressed float64
 }
 
+// Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
+// the given gradient image.
 func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	fmt.Println("histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
@@ -51,6 +58,8 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	return
 }
 
+
+// Entropy computes the 2D entropy of the gradient image, from the histogram.
 func (hist *Sipphist) Entropy() (ent float64) {
     total := float64(len(hist.grad.Pix))
 	for _, bin := range hist.bin {
@@ -70,6 +79,10 @@ func supScale(x, y, k int) float64 {
 	return (hyp/float64(k))
 }
 
+// Suppress suppresses the spike near the origin of the histogram by scaling the
+// values in the histogram by their distance from the origin. All the values in
+// in the histogram are multiplied by a factor that ranges from 0.0 at the
+// origin to 1.0 at k in any direction from the origin.
 func (hist *Sipphist) Suppress() {
 	if hist.suppressed != nil {
 		return
@@ -92,6 +105,8 @@ func (hist *Sipphist) Suppress() {
 	fmt.Println("Distance suppression complete; max suppressed value:", hist.maxSuppressed)
 }
 
+// RenderSuppressed renders the suppressed version of the histogram and returns
+// the result as an 8-bit grayscale image.
 func (hist *Sipphist) RenderSuppressed() Sippimage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
@@ -108,6 +123,8 @@ func (hist *Sipphist) RenderSuppressed() Sippimage {
 	return rnd
 }
 
+// Render renders the histogram by clipping all values to 255. Returns an 8-bit
+// grayscale image.
 func (hist *Sipphist) Render() Sippimage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
