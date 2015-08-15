@@ -25,10 +25,19 @@ type Sipphist struct {
 	maxSuppressed float64
 }
 
+const maxK = 2048
+
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
 func Hist(grad *Gradimage, k int) (hist *Sipphist) {
-	fmt.Println("histogram edge size:", (k*2+1))
+	if k == 0 {
+		if grad.MaxMod > maxK {
+			k = maxK
+		} else {
+			k = int(grad.MaxMod)+8
+		}
+	}
+	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
 	hist = new(Sipphist)
 	hist.grad = grad
