@@ -17,15 +17,30 @@ import (
 // Sipphist is a 2-dimensional histogram of the values in a complex gradient
 // image.
 type Sipphist struct {
+	// A reference to the gradient image we are computing from
 	grad *Gradimage
+	// The size of our histogram. It will be 2*k+1 on a side.
 	k int
+	// The histogram data.
 	bin [] uint32
+	// The index of the histogram bin for each gradient image pixel.
+	binIndex [] int
+	// The maximum bin value in the histogram.
 	max uint32
+	// A suppressed version of the histogram, stored as floats for subsequent
+	// computation.
 	suppressed [] float64
+	// The maximum suppressed value, stored as a float for subsequent 
+	// computation.
 	maxSuppressed float64
+	// The entropy for each bin value that actually occurred.
+	entropy [] float64
+	// The largest entropy value.
+	maxEntropy float64
 }
 
 const maxK = 2048
+const kMargin = 8
 
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
@@ -34,7 +49,7 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 		if grad.MaxMod > maxK {
 			k = maxK
 		} else {
-			k = int(grad.MaxMod)+8
+			k = int(grad.MaxMod)+kMargin
 		}
 	}
 	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
@@ -45,22 +60,24 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	stride := 2*k+1
 	histDataSize := stride*stride
 	hist.bin = make([] uint32, histDataSize)
+	hist.binIndex = make([] int, len(grad.Pix))
 	fmt.Println("histogram side:", stride, " data size: ", histDataSize)
 	
 	// Walk through the image, computing the bin address from the gradient 
-	// values. 
+	// values storing the bin address in binIndex, and incrementing the bin.
+	// Save the maximum bin value as well.
 	var factor float64 = 1.0
 	if grad.MaxMod > float64(k) {
 	    factor = float64(k) / grad.MaxMod
 	}
 	fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
-	for _, pixel := range grad.Pix {
+	for i, pixel := range grad.Pix {
 		u := int(math.Floor(factor*real(pixel))) + k
 		v := int(math.Floor(factor*imag(pixel))) + k
-		histIndex := v*stride + u
-		hist.bin[histIndex]++
-		if hist.bin[histIndex] > hist.max {
-			hist.max = hist.bin[histIndex]
+		hist.binIndex[i] = v*stride + u
+		hist.bin[hist.binIndex[i]]++
+		if hist.bin[hist.binIndex[i]] > hist.max {
+			hist.max = hist.bin[hist.binIndex[i]]
 		}
 	}
 	fmt.Println("Histogram complete. Maximum bin value:", hist.max)
@@ -68,17 +85,45 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 }
 
 
-// Entropy computes the 2D entropy of the gradient image, from the histogram.
-func (hist *Sipphist) Entropy() (ent float64) {
+// Entropy returns the 2D entropy of the gradient image, and a greyscale image
+// of the entropy at each gradient pixel.
+func (hist *Sipphist) Entropy() (float64, Sippimage) {
+	// Store the entropy values corresponding to the bin counts that actually
+	// occurred.
+	hist.entropy = make([] float64, hist.max+1)
     total := float64(len(hist.grad.Pix))
+    hist.maxEntropy = 0.0
+    var ent float64 = 0.0
 	for _, bin := range hist.bin {
 		if bin != 0 {
-			p := float64(bin) / total
-			ent += p * math.Log2(p)
+			// compute the entropy only once for a given bin value.
+			if hist.entropy[bin] == 0.0 {
+				p := float64(bin) / total
+				hist.entropy[bin] = p * math.Log2(p) * -1.0
+			}
+			ent += hist.entropy[bin]
+			if hist.entropy[bin] > hist.maxEntropy {
+				hist.maxEntropy = hist.entropy[bin]
+			}
 		}
 	}
-	ent *= -1
-	return
+	// Now that we have the table of entropies and the maximum, make a 
+	// greyscale image of the entropy at each gradient pixel.
+	entGray := new(SippGray)
+	entGray.Gray = image.NewGray(hist.grad.Rect)
+	entGrayPix := entGray.Pix()
+	// scale the entropy from (0-hist.maxEntropy) to (0-255)
+	scale := 255.0 / hist.maxEntropy
+	for i := range entGrayPix {
+		// The following lookup works as follows:
+		// i - the gradient (and entropy) image-pixel index
+		// hist.binIndex[i] - the histogram bin for that pixel
+		// hist.bin[hist.binIndex[i] - the value in that bin
+		// hist.entropy[...] The entropy for that value
+		// We scale that entropy and convert to an 8-bit pixel
+		entGrayPix[i] = uint8(hist.entropy[hist.bin[hist.binIndex[i]]]*scale)
+	}
+	return ent, entGray
 }
 
 func supScale(x, y, k int) float64 {
