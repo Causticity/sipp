@@ -86,7 +86,7 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 
 
 // Entropy returns the 2D entropy of the gradient image, and a greyscale image
-// of the entropy at each gradient pixel.
+// of the entropy for each histogram bin.
 func (hist *Sipphist) Entropy() (float64, Sippimage) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
@@ -108,20 +108,15 @@ func (hist *Sipphist) Entropy() (float64, Sippimage) {
 		}
 	}
 	// Now that we have the table of entropies and the maximum, make a 
-	// greyscale image of the entropy at each gradient pixel.
+	// greyscale image of the entropy for each bin.
+	stride := 2*hist.k+1
 	entGray := new(SippGray)
-	entGray.Gray = image.NewGray(hist.grad.Rect)
+	entGray.Gray = image.NewGray(image.Rect(0,0,stride,stride))
 	entGrayPix := entGray.Pix()
 	// scale the entropy from (0-hist.maxEntropy) to (0-255)
 	scale := 255.0 / hist.maxEntropy
-	for i := range entGrayPix {
-		// The following lookup works as follows:
-		// i - the gradient (and entropy) image-pixel index
-		// hist.binIndex[i] - the histogram bin for that pixel
-		// hist.bin[hist.binIndex[i] - the value in that bin
-		// hist.entropy[...] The entropy for that value
-		// We scale that entropy and convert to an 8-bit pixel
-		entGrayPix[i] = uint8(hist.entropy[hist.bin[hist.binIndex[i]]]*scale)
+	for i, val := range hist.bin {
+		entGrayPix[i] = uint8(hist.entropy[val]*scale)
 	}
 	return ent, entGray
 }

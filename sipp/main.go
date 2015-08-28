@@ -74,10 +74,10 @@ func main() {
 
 	ent, entImg := hist.Entropy()
 	fmt.Println("Entropy of the gradient image:", ent)
-	entName := *out + "_grad_ent.png"
+	entName := *out + "_hist_ent.png"
 	err = entImg.Write(&entName)
 	if err != nil {
-		fmt.Println("Error writing the gradient entropy image", err)
+		fmt.Println("Error writing the histogram entropy image", err)
 		os.Exit (1)
 	}
 }
