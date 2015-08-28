@@ -17,11 +17,11 @@ func main() {
 	var out = flag.String("out", "", "output image file prefix")
 	var k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
 							  "The histogram will be 2K+1 bins on a side.\n"+
-							  "         This is used only for 16-bit images. "+
-							  "         If K is omitted, it is computed from "+
+							  "        This is used only for 16-bit images.\n"+
+							  "        If K is omitted, it is computed from "+
 							  "the maximum excursion of the gradient.\n"+
-							  "8-bit images always use a 511x511 histogram,\n"+
-							  "         as that covers the entire possible space.")
+							  "        8-bit images always use a 511x511 histogram, "+
+							  "as that covers the entire possible space.")
 	flag.Parse()
 	fmt.Println("input file:<", *in, ">")
 	fmt.Println("output file prefix:<", *out, ">")
