@@ -23,8 +23,6 @@ type Sipphist struct {
 	k int
 	// The histogram data.
 	bin [] uint32
-	// The index of the histogram bin for each gradient image pixel.
-	binIndex [] int
 	// The maximum bin value in the histogram.
 	max uint32
 	// A suppressed version of the histogram, stored as floats for subsequent
@@ -60,24 +58,23 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	stride := 2*k+1
 	histDataSize := stride*stride
 	hist.bin = make([] uint32, histDataSize)
-	hist.binIndex = make([] int, len(grad.Pix))
 	fmt.Println("histogram side:", stride, " data size: ", histDataSize)
 	
 	// Walk through the image, computing the bin address from the gradient 
-	// values storing the bin address in binIndex, and incrementing the bin.
+	// values and incrementing the bin.
 	// Save the maximum bin value as well.
 	var factor float64 = 1.0
 	if grad.MaxMod > float64(k) {
 	    factor = float64(k) / grad.MaxMod
 	}
 	fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
-	for i, pixel := range grad.Pix {
+	for _, pixel := range grad.Pix {
 		u := int(math.Floor(factor*real(pixel))) + k
 		v := int(math.Floor(factor*imag(pixel))) + k
-		hist.binIndex[i] = v*stride + u
-		hist.bin[hist.binIndex[i]]++
-		if hist.bin[hist.binIndex[i]] > hist.max {
-			hist.max = hist.bin[hist.binIndex[i]]
+		binIndex := v*stride + u
+		hist.bin[binIndex]++
+		if hist.bin[binIndex] > hist.max {
+			hist.max = hist.bin[binIndex]
 		}
 	}
 	fmt.Println("Histogram complete. Maximum bin value:", hist.max)
