@@ -2,3 +2,24 @@ Simple Image Processing Pipeline
 
 What it says on the tin.
 
+To build in a default Go workspace (as described in 
+http://golang.org/doc/code.html#Workspaces), run 
+
+go install github.com/Causticity/sipp/sipp from anywhere.
+
+Windows version:
+go install github.com\Causticity\sipp\sipp
+
+This will build sipp into the bin directory of the workspace.
+
+Then to run it
+
+sipp -in=<path to input image> -out=<prefix for output images>
+
+For example, I have an out directory parallel to the standard src, pkg, and bin,
+so I run from the root as follows:
+
+sipp -in=src/github.com/Causticity/sipp/testdata/Lacryma_1024.png -out=out/Lac
+
+This prepends the various output files with "Lac" and places them in the out
+directory.
