@@ -4,6 +4,7 @@ import (
 	"flag"
     "fmt"
     "os"
+    "time"
 )
 
 import (
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+
+	start := time.Now()
+
 	var in = flag.String("in", "", "input image file; must be grayscale png")
 	var out = flag.String("out", "", "output image file prefix")
 	var k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
@@ -80,4 +84,8 @@ func main() {
 		fmt.Println("Error writing the histogram entropy image", err)
 		os.Exit (1)
 	}
+	
+	elapsed := time.Since(start)
+	fmt.Println("Elapsed time:" + elapsed.String())
+	
 }
