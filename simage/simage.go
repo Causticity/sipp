@@ -6,7 +6,6 @@ package simage
 
 import (
 	"image"
-	"image/draw"
 	// Package image/png is not used explicitly in the code below,
 	// but is imported for its initialization side-effect, which allows
 	// image.Decode to understand PNG formatted images.
@@ -32,10 +31,6 @@ type Sippimage interface {
 	Bpp() int
 	// Write encodes the image into a PNG of the given name.
 	Write(out *string) error
-	// Thumbnail returns a 100x100 version of the image. If the original is
-	// smaller than 100x100, the returned image will contain the original,
-	// centered. Thumbnails are always 8-bit Gray images.
-	Thumbnail() Sippimage
 }
 
 // A SippGray wraps a Go Gray image and implements the Sippimage interface.
@@ -132,24 +127,4 @@ func sippWrite(img image.Image, out *string) error {
 		return err
 	}
 	return png.Encode(writer, img)
-}
-
-func (img *SippGray) Thumbnail() (Sippimage) {
-	return thumbnail(img.Gray)
-}
-
-func (img *SippGray16) Thumbnail() (Sippimage) {
-	return thumbnail(img.Gray16)
-}
-
-func thumbnail(src draw.Image) (Sippimage) {
-	thumb := new(SippGray)
-	thumb.Gray = image.NewGray(image.Rect(0,0,100,100))
-	resize(src, thumb.Gray)
-	return thumb
-}
-
-func resize(src, dst draw.Image) {
-	// HACK: just paint the corner for now
-	draw.Draw(dst, dst.Bounds(), src, image.Point{0,0}, draw.Src)
 }
