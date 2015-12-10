@@ -37,6 +37,15 @@ func main() {
 	}
 	fmt.Println("source image read")
 	
+	thumb := src.Thumbnail()
+	fmt.Println("Thumbnail generated")
+	tname := *out + "_thumb.png"
+	err = thumb.Write(&tname)
+	if err != nil {
+		fmt.Println("Error writing thumbnail image:", err)
+		os.Exit (1)
+	}
+	
 	if src.Bpp() == 8 {
 		*k = 255
 		fmt.Println("Image is 8-bit. K forced to 255.")

@@ -6,11 +6,12 @@ package simage
 
 import (
 	"image"
-	"image/draw"
 	// Package image/png is not used explicitly in the code below,
 	// but is imported for its initialization side-effect, which allows
 	// image.Decode to understand PNG formatted images.
 	"image/png"
+	"fmt"
+    "math"
 	"os"
 	"reflect"
 	)
@@ -135,21 +136,182 @@ func sippWrite(img image.Image, out *string) error {
 }
 
 func (img *SippGray) Thumbnail() (Sippimage) {
-	return thumbnail(img.Gray)
+	return thumbnail(img)
 }
 
 func (img *SippGray16) Thumbnail() (Sippimage) {
-	return thumbnail(img.Gray16)
+	return thumbnail(img)
 }
 
-func thumbnail(src draw.Image) (Sippimage) {
+func thumbnail(src Sippimage) (Sippimage) {
 	thumb := new(SippGray)
 	thumb.Gray = image.NewGray(image.Rect(0,0,100,100))
-	resize(src, thumb.Gray)
+	// TODO: if the original is smaller than or equal to this, just center it
+	scaleDown(src, thumb.Gray)
 	return thumb
 }
 
-func resize(src, dst draw.Image) {
-	// HACK: just paint the corner for now
-	draw.Draw(dst, dst.Bounds(), src, image.Point{0,0}, draw.Src)
+// Scale the source image down to the destination image.
+// Preserves aspect ratio, leaving unused destination pixels untouched.
+// At present it just uses a simple box filter.
+// It might be possible to improve performance and clarity by making all
+// pixel fractions 1/16 and using essentially fixed-point arithmetic.
+func scaleDown(src Sippimage, dst *image.Gray) {		
+	srcRect := src.Bounds()
+	dstRect := dst.Bounds()
+	fmt.Println("srcRect:<", srcRect, ">")
+	fmt.Println("dstRect:<", dstRect, ">")
+	
+	srcWidth := srcRect.Dx()
+	srcHeight := srcRect.Dy()
+	dstWidth := dstRect.Dx()
+	dstHeight := dstRect.Dy()
+	fmt.Println("srcWidth:<", srcWidth, ">")
+	fmt.Println("srcHeight:<", srcHeight, ">")
+	fmt.Println("dstWidth:<", dstWidth, ">")
+	fmt.Println("dstHeight:<", dstHeight, ">")
+		
+	srcAR := float64(srcWidth) / float64(srcHeight)
+	dstAR := float64(dstWidth) / float64(dstHeight)
+	fmt.Println("srcAR:<", srcAR, ">")
+	fmt.Println("dstAR:<", dstAR, ">")
+		
+	var scale float64
+	var outWidth int
+	var outHeight int
+	if srcAR < dstAR {
+		// scale vertically and use a horizontal offset
+		scale = float64(srcHeight) / float64(dstHeight)
+		outWidth = int(float64(srcWidth)/scale)
+		outHeight = dstHeight
+		fmt.Println("Scaling vertically")
+	} else {
+		// scale horizontally and use a vertical offset
+		scale = float64(srcWidth) / float64(dstWidth)
+		outHeight = int(float64(srcHeight)/scale)
+		outWidth = dstWidth
+		fmt.Println("Scaling horizontally")
+	}
+	fmt.Println("scale:<", scale, ">")
+	fmt.Println("outWidth:<", outWidth, ">")
+	fmt.Println("outHeight:<", outHeight, ">")
+	
+	// One of the following will be 0.
+	hoff := (dstWidth - outWidth) / 2
+	voff := (dstHeight - outHeight) / 2
+	
+		
+	hend := hoff + outWidth
+	vend := voff + outHeight
+
+	fmt.Println("hoff, hend:<", hoff, ", ", hend, ">")
+	fmt.Println("voff, vend:<", voff, ", ", vend, ">")
+	
+	// Scale 16-bit images down to 8. We incour the cost spuriously for 8-bit
+	// images so that we can access the source polymorphically.
+	var scaleBpp float64 = 1.0
+	if src.Bpp() == 16 {
+		scaleBpp = 1.0 / 256.0
+	}
+	
+	fmt.Println("scaleBpp:", scaleBpp)
+		
+	// The minimum worthwhile fraction of a pixel 
+	const minFrac = 1.0/256.0
+	
+	_, frac := math.Modf(scale)
+	fmt.Println("frac:<", frac, ">")
+	
+	if frac < minFrac {
+		// Treat this as an integer scale
+		panic("Integer scaling not yet implemented") // TODO: implement
+	} else {
+		// fractional part of scale is non-trivial
+		// We process a left side, 0 or more middle pixels, and a right side
+		// similarly for rows a top, a set of middle rows, and a bottom
+		// Each of the border areas has a separate weight
+		
+		// Note that the vertical and horizontal averaging are actually
+		// separable, and more efficient done separately, as you avoid doing
+		// kernelx X kernely ops per pixel.
+				
+		var srcy, srcx int
+		var weight float64
+		
+		intrm := image.NewGray(image.Rect(0,0,outWidth,srcHeight))
+		
+		// generate intermediate rows by applying the scale factor to
+		// the source image horizontally
+		for inty := 0; inty < srcHeight; inty++ {
+			srcx = 0
+			weight = 1.0
+			srcUsed := 0.0
+			for intx := 0; intx < outWidth; intx++ {
+				var count float64 = 0.0
+				var val float64 = 0.0
+				for acc := weight; acc < scale; {
+					val = val + src.Val(srcx, srcy) * weight
+					srcUsed = srcUsed + weight
+					if srcUsed >= 1.0 {
+						srcUsed = 0.0
+						srcx++
+					}
+					count = count + 1.0
+					acc = acc + weight
+					if acc < scale {
+						rem := scale - acc
+						if rem <1.0 {
+							weight = rem
+						} else {
+							weight = 1.0
+						}
+					} else {
+						// Set up for next set of source pixels
+						weight = 1.0 - weight
+					}
+				}
+			val = val/count * scaleBpp
+			intrm.Pix[intrm.PixOffset(intx, inty)] = uint8(val)
+			}
+			srcy++
+		}
+		
+		// generate dst image by applying the scale factor to
+		// the intermediate image vertically
+		var intrmx, intrmy int
+		for outx := hoff; outx < hend; outx++ {
+			intrmy = 0
+			weight = 1.0
+			intrmUsed := 0.0
+			for outy := voff; outy < vend; outy++ {
+				var count float64 = 0.0
+				var val float64 = 0.0
+				for acc := weight; acc < scale; {
+				pixVal := float64(intrm.Pix[intrm.PixOffset(intrmx, intrmy)])
+					val = val + (pixVal * weight)
+					intrmUsed = intrmUsed + weight
+					if intrmUsed >= 1.0 {
+						intrmUsed = 0.0
+						intrmy++
+					}
+					count = count + 1.0
+					acc = acc + weight
+					if acc < scale {
+					rem := scale - acc
+						if rem <1.0 {
+							weight = rem
+						} else {
+							weight = 1.0
+						}
+					} else {
+						// Set up for next set of source pixels
+						weight = 1.0 - weight
+					}
+				}
+				val = val/count // intermediate image already 8 bit
+				dst.Pix[dst.PixOffset(outx, outy)] = uint8(val)
+			}
+			intrmx++
+		}
+	}
 }
