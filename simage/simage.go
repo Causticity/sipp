@@ -27,7 +27,7 @@ type Sippimage interface {
 	PixOffset(x, y int) int
 	// Pix returns the slice of underlying image data, for efficient access.
 	Pix() []uint8
-	// Val returns the grayscale value at x, y to a float64.
+	// Val returns the grayscale value at x, y as a float64.
 	Val(x, y int) float64
 	// Bpp returns the pixel depth of this image, either 8 or 16.
 	Bpp() int
@@ -215,103 +215,90 @@ func scaleDown(src Sippimage, dst *image.Gray) {
 	}
 	
 	fmt.Println("scaleBpp:", scaleBpp)
-		
-	// The minimum worthwhile fraction of a pixel 
-	const minFrac = 1.0/256.0
 	
-	_, frac := math.Modf(scale)
-	fmt.Println("frac:<", frac, ">")
+	hfilter := preComputeFilter(scale, outWidth, srcWidth, scaleBpp)
 	
-	if frac < minFrac {
-		// Treat this as an integer scale
-		panic("Integer scaling not yet implemented") // TODO: implement
-	} else {
-		// fractional part of scale is non-trivial
-		// We process a left side, 0 or more middle pixels, and a right side
-		// similarly for rows a top, a set of middle rows, and a bottom
-		// Each of the border areas has a separate weight
-		
-		// Note that the vertical and horizontal averaging are actually
-		// separable, and more efficient done separately, as you avoid doing
-		// kernelx X kernely ops per pixel.
-				
-		var srcy, srcx int
-		var weight float64
-		
-		intrm := image.NewGray(image.Rect(0,0,outWidth,srcHeight))
-		
-		// generate intermediate rows by applying the scale factor to
-		// the source image horizontally
-		for inty := 0; inty < srcHeight; inty++ {
-			srcx = 0
-			weight = 1.0
-			srcUsed := 0.0
-			for intx := 0; intx < outWidth; intx++ {
-				var count float64 = 0.0
-				var val float64 = 0.0
-				for acc := weight; acc < scale; {
-					val = val + src.Val(srcx, srcy) * weight
-					srcUsed = srcUsed + weight
-					if srcUsed >= 1.0 {
-						srcUsed = 0.0
-						srcx++
-					}
-					count = count + 1.0
-					acc = acc + weight
-					if acc < scale {
-						rem := scale - acc
-						if rem <1.0 {
-							weight = rem
-						} else {
-							weight = 1.0
-						}
-					} else {
-						// Set up for next set of source pixels
-						weight = 1.0 - weight
-					}
-				}
-			val = val/count * scaleBpp
-			intrm.Pix[intrm.PixOffset(intx, inty)] = uint8(val)
+	intrm := image.NewGray(image.Rect(0,0,outWidth,srcHeight))
+
+	for inty := 0; inty < srcHeight; inty++ {
+		// Apply the filter to the source row, generating an intermediate row 
+		for intx := 0; intx < outWidth; intx++ {
+			var val float64
+			for i := 0; i < hfilter[intx].n; i++ {
+				val = val + src.Val(hfilter[intx].idx+i, inty) * hfilter[intx].weights[i]
 			}
-			srcy++
-		}
-		
-		// generate dst image by applying the scale factor to
-		// the intermediate image vertically
-		var intrmx, intrmy int
-		for outx := hoff; outx < hend; outx++ {
-			intrmy = 0
-			weight = 1.0
-			intrmUsed := 0.0
-			for outy := voff; outy < vend; outy++ {
-				var count float64 = 0.0
-				var val float64 = 0.0
-				for acc := weight; acc < scale; {
-				pixVal := float64(intrm.Pix[intrm.PixOffset(intrmx, intrmy)])
-					val = val + (pixVal * weight)
-					intrmUsed = intrmUsed + weight
-					if intrmUsed >= 1.0 {
-						intrmUsed = 0.0
-						intrmy++
-					}
-					count = count + 1.0
-					acc = acc + weight
-					if acc < scale {
-					rem := scale - acc
-						if rem <1.0 {
-							weight = rem
-						} else {
-							weight = 1.0
-						}
-					} else {
-						// Set up for next set of source pixels
-						weight = 1.0 - weight
-					}
-				}
-				val = val/count // intermediate image already 8 bit
-				dst.Pix[dst.PixOffset(outx, outy)] = uint8(val)
-			}
-			intrmx++
+			intrm.Pix[intrm.PixOffset(intx, inty)] = uint8(math.Floor(val+0.5))
 		}
 	}
+	
+	vfilter := preComputeFilter(scale, outHeight, srcHeight, 1.0)
+	
+	for outx := 0; outx < outWidth; outx++ {
+		// Apply the filter to the intermediate column, generating an output column
+		for outy := 0; outy < outHeight; outy++ {
+			var val float64
+			for i := 0; i < vfilter[outy].n; i++ {
+				index := intrm.PixOffset(outx, vfilter[outy].idx + i)
+				val = val + float64(intrm.Pix[index]) * vfilter[outy].weights[i]
+			}
+			dst.Pix[dst.PixOffset(outx+hoff, outy+voff)] = uint8(math.Floor(val+0.5))
+		}
+	}
+}
+
+// Set of weights to use for an output pixel
+type filter struct {
+	// Index into the source row/columb where these weights start
+    idx int
+    // Number of pixels that contribute
+	n int
+	// Weight for each input pixel. There are n of these.
+	weights []float64
+}
+
+func preComputeFilter(scale float64, 
+					  outSize, srcSize int, 
+					  scaleBpp float64) []filter {
+	
+	ret := make([]filter, outSize)
+	
+	// The minimum worthwhile fraction of a pixel 
+	const minFrac = 1.0/256.0
+
+	for i:=0;i<outSize;i++ {
+		// compute the address and first weight
+		addr, invw := math.Modf(float64(i)*scale)
+		ret[i].idx = int(addr)
+		frstw := 1.0 - invw
+		if (frstw < minFrac) {
+			ret[i].idx++
+			frstw = 0.0
+		} else {
+			ret[i].n = 1
+		}
+		// compute the number of pixels
+		count, frac := math.Modf(scale - frstw)
+		ret[i].n = ret[i].n + int(count)
+		if frac >= minFrac {
+			ret[i].n++
+		} else {
+			frac = 0.0
+		}
+		// allocate the slice of weights
+		ret[i].weights = make([]float64,ret[i].n)
+		var windx int
+		if (frstw >0.0) {
+			ret[i].weights[windx] = frstw / scale * scaleBpp
+			windx++
+		}
+		for j:=0; j < int(count); j++ {
+			ret[i].weights[windx] = 1.0 / scale * scaleBpp
+			windx++
+		}
+		if frac > 0.0 {
+			ret[i].weights[windx] = frac / scale * scaleBpp
+		}
+	}
+	
+	return ret
 }
