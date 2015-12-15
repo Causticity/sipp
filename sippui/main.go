@@ -52,14 +52,12 @@ func createImageWindow(img simage.Sippimage) ui.Window {
 }
 
 func initUI() {
-	window := createImageWindow(src)
-    window.OnClosing(func() bool {
+	thumb := src.Thumbnail()
+	twin := createImageWindow(thumb)
+    twin.OnClosing(func() bool {
         ui.Stop()
         return true
     })
-    window.Show()
-	thumb := src.Thumbnail()
-	twin := createImageWindow(thumb)
 	twin.Show()
 }
 

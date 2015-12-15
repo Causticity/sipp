@@ -33,8 +33,8 @@ type Sippimage interface {
 	Bpp() int
 	// Write encodes the image into a PNG of the given name.
 	Write(out *string) error
-	// Thumbnail returns a 100x100 version of the image. If the original is
-	// smaller than 100x100, the returned image will contain the original,
+	// Thumbnail returns a small version of the image. If the original is
+	// smaller than the thumbnail, the returned image will contain the original,
 	// centered. Thumbnails are always 8-bit Gray images.
 	Thumbnail() Sippimage
 }
@@ -143,9 +143,13 @@ func (img *SippGray16) Thumbnail() (Sippimage) {
 	return thumbnail(img)
 }
 
+// Thumbnails are square, this many pixels on a side, padded with black if
+// original isn't square.
+const thumbSide = 150
+
 func thumbnail(src Sippimage) (Sippimage) {
 	thumb := new(SippGray)
-	thumb.Gray = image.NewGray(image.Rect(0,0,100,100))
+	thumb.Gray = image.NewGray(image.Rect(0,0,thumbSide,thumbSide))
 	// TODO: if the original is smaller than or equal to this, just center it
 	scaleDown(src, thumb.Gray)
 	return thumb
@@ -201,12 +205,6 @@ func scaleDown(src Sippimage, dst *image.Gray) {
 	voff := (dstHeight - outHeight) / 2
 	
 		
-	hend := hoff + outWidth
-	vend := voff + outHeight
-
-	fmt.Println("hoff, hend:<", hoff, ", ", hend, ">")
-	fmt.Println("voff, vend:<", voff, ", ", vend, ">")
-	
 	// Scale 16-bit images down to 8. We incour the cost spuriously for 8-bit
 	// images so that we can access the source polymorphically.
 	var scaleBpp float64 = 1.0
