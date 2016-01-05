@@ -12,6 +12,7 @@ import (
 	"github.com/andlabs/ui"
 
 	"github.com/Causticity/sipp/simage"
+	//"github.com/Causticity/sipp/stree"
     //"github.com/Causticity/sipp/sgrad"
     //"github.com/Causticity/sipp/shist"
 )

@@ -260,7 +260,10 @@ func preComputeFilter(scale float64,
 	
 	ret := make([]filter, outSize)
 	
-	// The minimum worthwhile fraction of a pixel 
+	// The minimum worthwhile fraction of a pixel. This value is also used
+	// to avoid direct floating-point comparisons; instead of comparing two
+	// values for equality, we test if their difference is smaller than this
+	// value.
 	const minFrac = 1.0/256.0
 
 	for i:=0;i<outSize;i++ {
