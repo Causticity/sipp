@@ -6,10 +6,10 @@ import (
 	"flag"
     "fmt"
     "image"
-    "image/draw"
+//    "image/draw"
     "os"
 
-	"github.com/andlabs/ui"
+	"gopkg.in/qml.v1"
 
 	"github.com/Causticity/sipp/simage"
 	//"github.com/Causticity/sipp/stree"
@@ -17,50 +17,10 @@ import (
     //"github.com/Causticity/sipp/shist"
 )
 
-var window ui.Window
 var srcName *string
 var k *int
 var src simage.Sippimage
 
-type areaHandler struct {
-	img		*image.RGBA
-}
-
-func (a *areaHandler) Paint(rect image.Rectangle) *image.RGBA {
-	return a.img.SubImage(rect).(*image.RGBA)
-}
-
-func (a *areaHandler) Mouse(me ui.MouseEvent) {
-	if me.Up != 0 {
-		fullsrc := createImageWindow(src)
-		fullsrc.OnClosing(func() bool {
-			return true
-		})
-		fullsrc.Show()
-	}
-}
-
-func (a *areaHandler) Key(ke ui.KeyEvent) bool { return false }
-
-func createImageWindow(img simage.Sippimage) ui.Window {
-	b := img.Bounds()
-    handler := areaHandler{image.NewRGBA(b)}
-    draw.Draw(handler.img, b, img, b.Min, draw.Src)
-	
-	area := ui.NewArea(b.Dx(), b.Dy(), &handler)
-	window = ui.NewWindow(*srcName, b.Dx(), b.Dy(), area)
-	return window
-}
-
-func initUI() {
-	thumb := src.Thumbnail()
-	twin := createImageWindow(thumb)
-    twin.OnClosing(func() bool {
-        ui.Stop()
-        return true
-    })
-	twin.Show()
-}
 
 func main() {
 	srcName = flag.String("in", "", "input image file; must be grayscale png")
@@ -87,9 +47,26 @@ func main() {
 		fmt.Println("Image is 8-bit. K forced to 255.")
 	}
 
-    go ui.Do(initUI)
-    err = ui.Go()
-    if err != nil {
-        panic(err)
-    }
+	if err := qml.Run(run); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	engine := qml.NewEngine()
+	engine.AddImageProvider("src", func(id string, width, height int) image.Image {
+		return src.Thumbnail()
+	})
+
+	component, err := engine.LoadFile("sippui.qml")
+	if err != nil {
+		return err
+	}
+
+	win := component.CreateWindow(nil)
+	win.Show()
+	win.Wait()
+
+	return nil
 }
