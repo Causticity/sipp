@@ -8,8 +8,8 @@ import (
 )
 
 // We store all images as a tree, retaining the operations and parameters that
-// produced each image from the one above it in the tree. A SippNode is a node
-// in the tree.
+// produced each image from its parent in the tree. A SippNode is a node in the
+// tree.
 type SippNode struct {
 	// The Image at this node.
 	src *Sippimage
@@ -18,7 +18,7 @@ type SippNode struct {
 	
 	Params *SippOpParams
 	// The nodes that have been derived (and retained) from this node.
-	// The slice is nil at a leaf.
+	// The slice itself is nil at a leaf.
 	Children []*SippNode
 	// The node that this one was derived from, nil at the root of the tree.
 	Parent *SippNode
