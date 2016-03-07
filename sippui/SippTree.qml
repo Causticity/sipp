@@ -2,9 +2,7 @@ import QtQuick 2.2
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 
-Window {
-    id: newSippTree
-    
+Window {    
     width: 500
     height: 500
     

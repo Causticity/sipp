@@ -2,7 +2,6 @@ import QtQuick 2.2
 import QtQuick.Window 2.1
 
 Window {
-    id: imageViewer
     minimumWidth: srcImage.width
     minimumHeight: srcImage.height
     x: Screen.width/2 - width/2
