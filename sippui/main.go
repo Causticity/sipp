@@ -23,7 +23,7 @@ var src simage.Sippimage
 
 func main() {
 	/*
-	srcName = flag.String("in", "", "input image file; must be grayscale png")
+	// This will become a parameter to the gradient op.
 	k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
 						 "The histogram will be 2K+1 bins on a side.\n"+
 						 "        This is used only for 16-bit images.\n"+
@@ -31,17 +31,10 @@ func main() {
 						 "the maximum excursion of the gradient.\n"+
 						 "        8-bit images always use a 511x511 histogram, "+
 						 "as that covers the entire possible space.")
-	flag.Parse()
-	fmt.Println("input file:<", *srcName, ">")
 
-	var err error
-	src, err = simage.Read(srcName)
-	if err != nil {
-		fmt.Println("Error reading image:", err)
-		os.Exit (1)
-	}
-	fmt.Println("source image read")
-
+	// This test will move to the gradient op. Specifically, it won't be 
+	// available in the UI for 8-bit images. But it will be displayed in the
+	// info display.
 	if src.Bpp() == 8 {
 		*k = 255
 		fmt.Println("Image is 8-bit. K forced to 255.")
