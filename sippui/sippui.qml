@@ -22,23 +22,24 @@ ApplicationWindow {
             	objectName: "newTree"
             	enabled: true
             }
+            //MenuItem {
+            //	text: "Open Tree"
+            //	shortcut: StandardKey.Open
+            //	objectName: "openTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Tree"
+            //	objectName: "saveTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Image"
+            //	objectName: "saveImage"
+            //	enabled: false
+            //}
             MenuItem {
-            	text: "Open Tree"
-            	shortcut: StandardKey.Open
-            	objectName: "openTree"
-            	enabled: false
-            }
-            MenuItem {
-            	text: "Save Tree"
-            	objectName: "saveTree"
-            	enabled: false
-            }
-            MenuItem {
-            	text: "Save Image"
-            	enabled: false
-            }
-            MenuItem {
-            	text: "Close Tree"
+            	text: "Close Tree (and exit)"
                 shortcut: StandardKey.Close
             	objectName: "closeTree"
             	onTriggered: {

@@ -3,7 +3,7 @@
 package main
 
 import (
-//	"flag"
+	"flag"
     "fmt"
     "image"
 //    "image/draw"
@@ -17,7 +17,7 @@ import (
     //"github.com/Causticity/sipp/shist"
 )
 
-//var srcName *string
+var srcName *string
 //var k *int
 var src simage.Sippimage
 
@@ -47,6 +47,8 @@ func main() {
 		fmt.Println("Image is 8-bit. K forced to 255.")
 	}
 	*/
+	srcName = flag.String("in", "", "input image file; must be grayscale png")
+	flag.Parse()
 	if err := qml.Run(run); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -80,8 +82,12 @@ func run() error {
 	treeRoot.On("gotFile", imageName)
 	
 	newTree := app.ObjectByName("newTree")
-	newTree.On("triggered", func() {treeRoot.Call("getFile")})		
+	newTree.On("triggered", func() {treeRoot.Call("getFile")})
 
+	if len(*srcName) > 0 {
+		imageName(*srcName)
+	}
+	
 	app.Wait()
 
 	return nil
