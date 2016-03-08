@@ -21,7 +21,6 @@ import (
 //var k *int
 var src simage.Sippimage
 
-
 func main() {
 	/*
 	srcName = flag.String("in", "", "input image file; must be grayscale png")
@@ -54,6 +53,9 @@ func main() {
 	}
 }
 
+var app *qml.Window
+var treeRoot *qml.Window
+
 func run() error {
 	engine := qml.NewEngine()
 	engine.AddImageProvider("thumb", loadImage)
@@ -61,16 +63,34 @@ func run() error {
 		return src
 	})
 
-	component, err := engine.LoadFile("sippui.qml")
+	appComponent, err := engine.LoadFile("sippui.qml")
 	if err != nil {
 		return err
 	}
+	
+	treeComponent, err := engine.LoadFile("SippTreeRoot.qml")
+	if err != nil {
+		return err
+	}
+	
+	app = appComponent.CreateWindow(nil)
+	app.Show()
+	
+	treeRoot = treeComponent.CreateWindow(nil)
+	treeRoot.On("gotFile", imageName)
+	
+	newTree := app.ObjectByName("newTree")
+	newTree.On("triggered", func() {treeRoot.Call("getFile")})		
 
-	win := component.CreateWindow(nil)
-	win.Show()
-	win.Wait()
+	app.Wait()
 
 	return nil
+}
+
+func imageName (url string) {
+	 treeRoot.Call("setThumbSource", url)
+	 treeRoot.Set("title", url)
+	 treeRoot.Show()
 }
 
 func loadImage(srcName string, width, height int) image.Image {

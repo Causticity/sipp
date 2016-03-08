@@ -12,22 +12,25 @@ ApplicationWindow {
     // figure out how to properly do SDI with QtQuick.
     width: 1
     height: 1
-    
+
     menuBar: MenuBar {
         Menu {
             title: "File"
             MenuItem { 
             	text: "New Tree" 
             	shortcut: StandardKey.New
-            	onTriggered: newSippTree.start()
+            	objectName: "newTree"
+            	enabled: true
             }
             MenuItem {
             	text: "Open Tree"
             	shortcut: StandardKey.Open
+            	objectName: "openTree"
             	enabled: false
             }
             MenuItem {
             	text: "Save Tree"
+            	objectName: "saveTree"
             	enabled: false
             }
             MenuItem {
@@ -37,14 +40,14 @@ ApplicationWindow {
             MenuItem {
             	text: "Close Tree"
                 shortcut: StandardKey.Close
+            	objectName: "closeTree"
             	onTriggered: {
+            		// Really needs an "Are you sure?" dialog
             		app.close()
             	}
-            	enabled: false
+            	enabled: true
             }
 			enabled: true
         }
-    }
-
-    SippTree { id: newSippTree }
+    }		
 }
