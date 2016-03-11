@@ -84,7 +84,7 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 
 // Entropy returns the 2D entropy of the gradient image, and a greyscale image
 // of the entropy for each histogram bin.
-func (hist *Sipphist) Entropy() (float64, Sippimage) {
+func (hist *Sipphist) Entropy() (float64, SippImage) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
 	hist.entropy = make([] float64, hist.max+1)
@@ -153,7 +153,7 @@ func (hist *Sipphist) Suppress() {
 
 // RenderSuppressed renders the suppressed version of the histogram and returns
 // the result as an 8-bit grayscale image.
-func (hist *Sipphist) RenderSuppressed() Sippimage {
+func (hist *Sipphist) RenderSuppressed() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
@@ -171,7 +171,7 @@ func (hist *Sipphist) RenderSuppressed() Sippimage {
 
 // Render renders the histogram by clipping all values to 255. Returns an 8-bit
 // grayscale image.
-func (hist *Sipphist) Render() Sippimage {
+func (hist *Sipphist) Render() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
 	stride := 2*hist.k+1

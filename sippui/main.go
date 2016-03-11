@@ -19,7 +19,7 @@ import (
 
 var srcName *string
 //var k *int
-var src simage.Sippimage
+var src simage.SippImage
 
 func main() {
 	/*
@@ -33,8 +33,7 @@ func main() {
 						 "as that covers the entire possible space.")
 
 	// This test will move to the gradient op. Specifically, it won't be 
-	// available in the UI for 8-bit images. But it will be displayed in the
-	// info display.
+	// manipulable in the UI for 8-bit images, but it will be displayed.
 	if src.Bpp() == 8 {
 		*k = 255
 		fmt.Println("Image is 8-bit. K forced to 255.")
@@ -62,25 +61,27 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	
+
 	treeComponent, err := engine.LoadFile("SippTreeRoot.qml")
 	if err != nil {
 		return err
 	}
-	
+
 	app = appComponent.CreateWindow(nil)
 	app.Show()
-	
+
 	treeRoot = treeComponent.CreateWindow(nil)
 	treeRoot.On("gotFile", imageName)
-	
+
 	newTree := app.ObjectByName("newTree")
 	newTree.On("triggered", func() {treeRoot.Call("getFile")})
 
 	if len(*srcName) > 0 {
 		imageName(*srcName)
+	} else {
+		treeRoot.Call("getFile")
 	}
-	
+
 	app.Wait()
 
 	return nil

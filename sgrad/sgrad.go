@@ -1,5 +1,5 @@
 // Package sgrad provides facilities for the computation and rendering of
-// a finite-difference gradient image from a source Sippimage.
+// a finite-difference gradient image from a source SippImage.
 package sgrad
 
 import (
@@ -27,7 +27,7 @@ type Gradimage struct {
 // narrower and shorter than the original. We'd rather reduce the size of the
 // output image than arbitrarily wrap around or extend the source image, as
 // any such procedure could introduce errors into the statistics.
-func Fdgrad(src Sippimage) (grad *Gradimage) {
+func Fdgrad(src SippImage) (grad *Gradimage) {
 	// Create the dst image from the bounds of the src
 	srect := src.Bounds()
 	grad = new(Gradimage)
@@ -60,7 +60,7 @@ func Fdgrad(src Sippimage) (grad *Gradimage) {
 
 // Render the real and imaginary parts of the gradient image as separate 
 // 8-bit grayscale images.
-func (grad *Gradimage) Render() (Sippimage, Sippimage) {
+func (grad *Gradimage) Render() (SippImage, SippImage) {
 	// TODO: Store these in Gradimage and compute them as the image is
 	// 		 generated.
 	// compute max excursions of the real and imag parts

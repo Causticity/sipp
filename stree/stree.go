@@ -12,9 +12,11 @@ import (
 // tree.
 type SippNode struct {
 	// The Image at this node.
-	src *Sippimage
+	src *SippImage
 	// The operation that got us here from the Parent node.
-	Op *Opfunc
+	Op *SippOp
+	
+	// The UI object that corresponds to this node.
 	
 	Params *SippOpParams
 	// The nodes that have been derived (and retained) from this node.
@@ -26,8 +28,8 @@ type SippNode struct {
 
 // A SippOp specifies a function that takes a source image and an arbitrary
 // set of parameters, and returns a slice of result images.
-type Opfunc interface {
-	Op(*Sippimage, *SippOpParams) ([]*Sippimage)
+type SippOp interface {
+	Op(*SippImage, *SippOpParams) ([]*SippImage)
 }
 
 // A type used only to allow storing an arbitrary set of parameters as part of

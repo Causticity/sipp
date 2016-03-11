@@ -16,9 +16,9 @@ import (
 	"reflect"
 	)
 
-// Sippimage embeds the Image interface from the Go standard library and adds
+// SippImage embeds the Image interface from the Go standard library and adds
 // a few methods to enable polymorphism.
-type Sippimage interface {
+type SippImage interface {
 	// Embed the Go image interface to allow reading and writing using the Go 
 	// PNG decoder and encoder.
 	image.Image
@@ -36,10 +36,10 @@ type Sippimage interface {
 	// Thumbnail returns a small version of the image. If the original is
 	// smaller than the thumbnail, the returned image will contain the original,
 	// centered. Thumbnails are always 8-bit Gray images.
-	Thumbnail() Sippimage
+	Thumbnail() SippImage
 }
 
-// A SippGray wraps a Go Gray image and implements the Sippimage interface.
+// A SippGray wraps a Go Gray image and implements the SippImage interface.
 type SippGray struct {
 	*image.Gray
 }
@@ -59,7 +59,7 @@ func (sg *SippGray) Bpp() int {
 	return 8
 }
 
-// A SippGray16 wraps a Go Gray16 image and implements the Sippimage interface.
+// A SippGray16 wraps a Go Gray16 image and implements the SippImage interface.
 type SippGray16 struct {
 	*image.Gray16
 }
@@ -83,9 +83,9 @@ func (sg *SippGray16) Bpp() int {
 var grayType = reflect.TypeOf(new(image.Gray))
 var gray16Type = reflect.TypeOf(new(image.Gray16))
 
-// Read decodes the file named by the given string, returning a Sippimage.
+// Read decodes the file named by the given string, returning a SippImage.
 // Currently panics if the image is not grayscale, either 8 or 16 bit.
-func Read(in *string) (Sippimage, error) {
+func Read(in *string) (SippImage, error) {
 	reader, err := os.Open(*in)
 	if err != nil {
 		return nil, err
@@ -135,11 +135,11 @@ func sippWrite(img image.Image, out *string) error {
 	return png.Encode(writer, img)
 }
 
-func (img *SippGray) Thumbnail() (Sippimage) {
+func (img *SippGray) Thumbnail() (SippImage) {
 	return thumbnail(img)
 }
 
-func (img *SippGray16) Thumbnail() (Sippimage) {
+func (img *SippGray16) Thumbnail() (SippImage) {
 	return thumbnail(img)
 }
 
@@ -147,7 +147,7 @@ func (img *SippGray16) Thumbnail() (Sippimage) {
 // original isn't square.
 const thumbSide = 150
 
-func thumbnail(src Sippimage) (Sippimage) {
+func thumbnail(src SippImage) (SippImage) {
 	thumb := new(SippGray)
 	thumb.Gray = image.NewGray(image.Rect(0,0,thumbSide,thumbSide))
 	// TODO: if the original is smaller than or equal to this, just center it
@@ -160,7 +160,7 @@ func thumbnail(src Sippimage) (Sippimage) {
 // At present it just uses a simple box filter.
 // It might be possible to improve performance and clarity by making all
 // pixel fractions 1/16 and using essentially fixed-point arithmetic.
-func scaleDown(src Sippimage, dst *image.Gray) {		
+func scaleDown(src SippImage, dst *image.Gray) {		
 	srcRect := src.Bounds()
 	dstRect := dst.Bounds()
 	fmt.Println("srcRect:<", srcRect, ">")
