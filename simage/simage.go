@@ -10,7 +10,7 @@ import (
 	// but is imported for its initialization side-effect, which allows
 	// image.Decode to understand PNG formatted images.
 	"image/png"
-	"fmt"
+	//"fmt"
     "math"
 	"os"
 	"reflect"
@@ -163,22 +163,22 @@ func thumbnail(src SippImage) (SippImage) {
 func scaleDown(src SippImage, dst *image.Gray) {		
 	srcRect := src.Bounds()
 	dstRect := dst.Bounds()
-	fmt.Println("srcRect:<", srcRect, ">")
-	fmt.Println("dstRect:<", dstRect, ">")
+	//fmt.Println("srcRect:<", srcRect, ">")
+	//fmt.Println("dstRect:<", dstRect, ">")
 	
 	srcWidth := srcRect.Dx()
 	srcHeight := srcRect.Dy()
 	dstWidth := dstRect.Dx()
 	dstHeight := dstRect.Dy()
-	fmt.Println("srcWidth:<", srcWidth, ">")
-	fmt.Println("srcHeight:<", srcHeight, ">")
-	fmt.Println("dstWidth:<", dstWidth, ">")
-	fmt.Println("dstHeight:<", dstHeight, ">")
+	//fmt.Println("srcWidth:<", srcWidth, ">")
+	//fmt.Println("srcHeight:<", srcHeight, ">")
+	//fmt.Println("dstWidth:<", dstWidth, ">")
+	//fmt.Println("dstHeight:<", dstHeight, ">")
 		
 	srcAR := float64(srcWidth) / float64(srcHeight)
 	dstAR := float64(dstWidth) / float64(dstHeight)
-	fmt.Println("srcAR:<", srcAR, ">")
-	fmt.Println("dstAR:<", dstAR, ">")
+	//fmt.Println("srcAR:<", srcAR, ">")
+	//fmt.Println("dstAR:<", dstAR, ">")
 		
 	var scale float64
 	var outWidth int
@@ -188,17 +188,17 @@ func scaleDown(src SippImage, dst *image.Gray) {
 		scale = float64(srcHeight) / float64(dstHeight)
 		outWidth = int(float64(srcWidth)/scale)
 		outHeight = dstHeight
-		fmt.Println("Scaling vertically")
+		//fmt.Println("Scaling vertically")
 	} else {
 		// scale horizontally and use a vertical offset
 		scale = float64(srcWidth) / float64(dstWidth)
 		outHeight = int(float64(srcHeight)/scale)
 		outWidth = dstWidth
-		fmt.Println("Scaling horizontally")
+		//fmt.Println("Scaling horizontally")
 	}
-	fmt.Println("scale:<", scale, ">")
-	fmt.Println("outWidth:<", outWidth, ">")
-	fmt.Println("outHeight:<", outHeight, ">")
+	//fmt.Println("scale:<", scale, ">")
+	//fmt.Println("outWidth:<", outWidth, ">")
+	//fmt.Println("outHeight:<", outHeight, ">")
 	
 	// One of the following will be 0.
 	hoff := (dstWidth - outWidth) / 2
@@ -212,7 +212,7 @@ func scaleDown(src SippImage, dst *image.Gray) {
 		scaleBpp = 1.0 / 256.0
 	}
 	
-	fmt.Println("scaleBpp:", scaleBpp)
+	//fmt.Println("scaleBpp:", scaleBpp)
 	
 	hfilter := preComputeFilter(scale, outWidth, srcWidth, scaleBpp)
 	

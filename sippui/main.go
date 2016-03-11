@@ -94,7 +94,7 @@ func imageName (url string) {
 }
 
 func loadImage(srcName string, width, height int) image.Image {
-	fmt.Println("input file selected:<", srcName, ">")
+	//fmt.Println("input file selected:<", srcName, ">")
 
 	var err error
 	src, err = simage.Read(&srcName)
