@@ -11,31 +11,13 @@ Window {
     
     id: newSippTree
     
-    FileDialog {
-        id: srcFileDialog
-        nameFilters: [ "Image files (*.png)" ]
-        folder: "../testdata"
-        onAccepted: {
-	    	// The URL comes back with a "file://" prefix, so we remove that.
-	    	newSippTree.gotFile(srcFileDialog.fileUrl.toString().substring(6))
-	    }
-    }
-    
-    // These indirections are necessary because I can't seem to get access to 
-    // the FileDialog object from Go.
-	signal gotFile(string filename) 
-	
-    function getFile() {
-    	srcFileDialog.open()
-    }
-    
     function setThumbSource(name) {
 		thumb.source = "image://thumb/" + name
 	}
     
     Image {
     	id: thumb
-    	objectName: "thumby"
+    	objectName: "thumb"
         anchors.centerIn: parent
     	MouseArea {
         	anchors.fill: parent

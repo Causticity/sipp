@@ -68,18 +68,15 @@ func run() error {
 	}
 
 	app = appComponent.CreateWindow(nil)
+	app.On("gotFile", imageName)
 	app.Show()
 
 	treeRoot = treeComponent.CreateWindow(nil)
-	treeRoot.On("gotFile", imageName)
-
-	newTree := app.ObjectByName("newTree")
-	newTree.On("triggered", func() {treeRoot.Call("getFile")})
 
 	if len(*srcName) > 0 {
 		imageName(*srcName)
 	} else {
-		treeRoot.Call("getFile")
+		app.Call("getFile")
 	}
 
 	app.Wait()
