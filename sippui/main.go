@@ -12,7 +12,7 @@ import (
 	"gopkg.in/qml.v1"
 
 	"github.com/Causticity/sipp/simage"
-	//"github.com/Causticity/sipp/stree"
+	"github.com/Causticity/sipp/stree"
     //"github.com/Causticity/sipp/sgrad"
     //"github.com/Causticity/sipp/shist"
 )
@@ -47,34 +47,32 @@ func main() {
 	}
 }
 
+var appComponent qml.Object
+
 var app *qml.Window
-var treeRoot *qml.Window
+var currentTreeRoot *stree.SippNode
 
 func run() error {
 	engine := qml.NewEngine()
-	engine.AddImageProvider("thumb", loadImage)
-	engine.AddImageProvider("src", func(id string, width, height int) image.Image {
-		return src
-	})
+	engine.AddImageProvider("thumb", thumbProvider)
+	engine.AddImageProvider("src", srcProvider)
 
 	appComponent, err := engine.LoadFile("sippui.qml")
 	if err != nil {
 		return err
 	}
 
-	treeComponent, err := engine.LoadFile("SippTreeRoot.qml")
+	err = stree.InitTreeComponents(engine)
 	if err != nil {
 		return err
 	}
 
 	app = appComponent.CreateWindow(nil)
-	app.On("gotFile", imageName)
+	app.On("gotFile", newTree)
 	app.Show()
 
-	treeRoot = treeComponent.CreateWindow(nil)
-
 	if len(*srcName) > 0 {
-		imageName(*srcName)
+		newTree(*srcName)
 	} else {
 		app.Call("getFile")
 	}
@@ -84,21 +82,15 @@ func run() error {
 	return nil
 }
 
-func imageName (url string) {
-	 treeRoot.Call("setThumbSource", url)
-	 treeRoot.Set("title", url)
-	 treeRoot.Show()
+func newTree (url string) {
+	currentTreeRoot = stree.NewSippTree(url)
+	currentTreeRoot.BuildUI(url)
 }
 
-func loadImage(srcName string, width, height int) image.Image {
-	//fmt.Println("input file selected:<", srcName, ">")
+func srcProvider(srcName string, width, height int) image.Image {
+	return currentTreeRoot.Src[0]
+}
 
-	var err error
-	src, err = simage.Read(&srcName)
-	if err != nil {
-		fmt.Println("Error reading image:", err)
-		os.Exit (1)
-	}
-	//fmt.Println("source image read; returning thumbnail")
-	return src.Thumbnail()
+func thumbProvider(srcName string, width, height int) image.Image {
+	return currentTreeRoot.Src[0].Thumbnail()
 }

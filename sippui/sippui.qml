@@ -23,7 +23,7 @@ ApplicationWindow {
             	text: "New Tree" 
             	shortcut: StandardKey.New
             	objectName: "newTree"
-            	onTriggered: srcFileDialog.open()
+            	onTriggered: app.getFile()
             	enabled: true
             }
             //MenuItem {
@@ -71,6 +71,7 @@ ApplicationWindow {
     
     // These indirections are necessary because I can't seem to get access to 
     // the FileDialog object from Go.
+    
 	signal gotFile(string filename) 
 	
     function getFile() {
