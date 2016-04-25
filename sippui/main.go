@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
     "fmt"
-    "image"
+//    "image"
 //    "image/draw"
     "os"
 
@@ -50,12 +50,11 @@ func main() {
 var appComponent qml.Object
 
 var app *qml.Window
-var currentTreeRoot *stree.SippNode
 
 func run() error {
 	engine := qml.NewEngine()
-	engine.AddImageProvider("thumb", thumbProvider)
-	engine.AddImageProvider("src", srcProvider)
+	engine.AddImageProvider("thumb", stree.ThumbProvider)
+	engine.AddImageProvider("src", stree.SrcProvider)
 
 	appComponent, err := engine.LoadFile("sippui.qml")
 	if err != nil {
@@ -68,11 +67,12 @@ func run() error {
 	}
 
 	app = appComponent.CreateWindow(nil)
-	app.On("gotFile", newTree)
+	app.On("gotFile", stree.NewTree)
+	app.On("closeCurrentTree", stree.CloseTree)
 	app.Show()
 
 	if len(*srcName) > 0 {
-		newTree(*srcName)
+		stree.NewTree(*srcName)
 	} else {
 		app.Call("getFile")
 	}
@@ -82,15 +82,3 @@ func run() error {
 	return nil
 }
 
-func newTree (url string) {
-	currentTreeRoot = stree.NewSippTree(url)
-	currentTreeRoot.BuildUI(url)
-}
-
-func srcProvider(srcName string, width, height int) image.Image {
-	return currentTreeRoot.Src[0]
-}
-
-func thumbProvider(srcName string, width, height int) image.Image {
-	return currentTreeRoot.Src[0].Thumbnail()
-}

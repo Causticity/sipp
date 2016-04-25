@@ -8,8 +8,7 @@ ApplicationWindow {
 
     title: "SIPP"
 
-    // Hack to make the top window invisible, hopefully temporary until I can
-    // figure out how to properly do SDI with QtQuick.
+    // Hack to make the top window invisible.
     width: 1
     height: 1
     
@@ -17,6 +16,7 @@ ApplicationWindow {
     y: Screen.height/4
 
     menuBar: MenuBar {
+    	id: appMenuBar
         Menu {
             title: "File"
             MenuItem { 
@@ -48,15 +48,25 @@ ApplicationWindow {
             	objectName: "closeTree"
             	onTriggered: {
             		// Really needs an "Are you sure?" dialog
-            		// and must apply to the "currrent" tree
-            		// and must call into Go to manage Go structs
-            		app.close()
+            		app.closeCurrentTree()
             	}
             	enabled: true
+            }
+            MenuItem {
+            	text: "Close Image"
+                shortcut: StandardKey.Close
+            	objectName: "closeImage"
+            	onTriggered: {
+            		// Really needs an "Are you sure?" dialog
+            		app.closeCurrentImage()
+            	}
+            	enabled: false
             }
 			enabled: true
         }
     }
+
+    signal closeCurrentTree()
     
 	FileDialog {
         id: srcFileDialog
@@ -78,5 +88,4 @@ ApplicationWindow {
     	srcFileDialog.open()
     }
     
-
 }

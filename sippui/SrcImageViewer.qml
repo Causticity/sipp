@@ -10,11 +10,39 @@ Window {
         srcImage.source = source
         width = srcImage.implicitWidth
         height = srcImage.implicitHeight
-        title = source
+        //title = source
+        title = "dunno yet"
         visible = true
     }
     Image {
         id: srcImage
         anchors.centerIn: parent
+        cache: false
     }
+    Component.onCompleted: {
+    	requestActivate()
+    }
+    onActiveChanged: {
+    	if (active) {
+    		title = "I'm active!"
+    		//app.appMenuBar.closeMenuItem.text = "Close Image"
+    		// Send Go a signal here, so Go can change the menu
+    	} else {
+    		title = "I'm NOT active!"
+    		// Send Go a signal here, so Go can change the menu
+    	}
+    }
+    // TODO: This doesn't work for the standard key, but does for a regular key,
+    // because the app menu catches the key. This is going to have to happen 
+    // from Go.
+	Item {
+		focus: true
+		Keys.onPressed: {
+			if (event.key == StandardKey.Close) {
+				imageViewer.close()
+				event.accepted = true;
+			}
+		}
+	}
+	
 }

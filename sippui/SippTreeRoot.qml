@@ -10,7 +10,7 @@ Window {
     y: Screen.height/15
     
     id: newSippTree
-    
+        
     function setThumbSource(name) {
 		thumb.source = "image://thumb/" + name
 	}
@@ -19,15 +19,29 @@ Window {
     	id: thumb
     	objectName: "thumb"
         anchors.centerIn: parent
+        cache: false
     	MouseArea {
         	anchors.fill: parent
-        	onClicked: {
-        		imageViewer.open("image://src/")
-        		//imageViewer.title = name
-        	}
+        	onClicked: newSippTree.thumbClicked()
         }
 	}
 
-    SrcImageViewer { id: imageViewer }
+	Text { id: myText }
+    
+    signal focusChanged()
+    signal thumbClicked()
+    
+    onActiveChanged: {
+    	if (active) {
+    		myText.text = "I have active focus and " + (activeFocusItem==null ? 
+    			"there is not an activeFocusItem" : "there IS an activeFocusItem")
+    		//if (activeFocusItem != null) {
+    		//	newSippTree.parent.menuBar.closeMenuItem.text = "Close Tree"
+    		//}
+    	} else {
+    		myText.text = "I do not have active focus"
+		}
+    	newSippTree.focusChanged()
+    }
 
 }

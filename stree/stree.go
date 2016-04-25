@@ -1,10 +1,12 @@
 // Package stree provides a SippNode class for organising SIPP images,
-// properties, and operations
+// properties, and operations, as well as functions and variables for managing
+// the list of trees. TODO: Separate the list from the node code?
 
 package stree
 
 import (
     "fmt"
+    "image"
 
 	"gopkg.in/qml.v1"
 
@@ -23,7 +25,11 @@ type SippNode struct {
 	SippOp
 	
 	// The UI object that corresponds to this node.
-	QmlRoot *qml.Window
+	QmlNode *qml.Window
+	
+	// The UI object(s) that correspond(s) to the window(s) displaying the full
+	// image(s) for this node.
+	QmlImage *qml.Window
 	
 	// The parameters to the SippOp that got us here.
 	Params SippOpParams
@@ -36,10 +42,10 @@ type SippNode struct {
 	Parent *SippNode
 }
 
-// A SippOp specifies a function that takes a source image and an arbitrary
-// set of parameters, and returns a slice of result images.
+// A SippOp specifies a function that takes a slice of source images and an 
+// arbitrary set of parameters, and returns a slice of result images.
 type SippOp interface {
-	Op(*SippImage, *SippOpParams) ([]*SippImage)
+	Op([]*SippImage, *SippOpParams) ([]*SippImage)
 }
 
 // A type used only to allow storing an arbitrary set of parameters as part of
@@ -47,6 +53,7 @@ type SippOp interface {
 type SippOpParams interface {}
 
 var treeComponent qml.Object
+var srcImageComponent qml.Object
 
 // Package-wide initialisation, but it requires that the QML Engine be 
 // available, so it can't be done as an actual package init, but must be 
@@ -54,6 +61,14 @@ var treeComponent qml.Object
 func InitTreeComponents(engine *qml.Engine) error {
 	var err error
 	treeComponent, err = engine.LoadFile("SippTreeRoot.qml")
+	if err != nil {
+		return err
+	}
+	srcImageComponent, err = engine.LoadFile("SrcImageViewer.qml")
+	if err != nil {
+		return err
+	}
+	
 	return err
 }
 
@@ -72,6 +87,8 @@ func NewSippTree(url string) *SippNode {
 	return newGuy
 }
 
+var xBase, yBase int
+
 // BuildUI sets up the QML elements for this tree. As some of the setup done
 // here can result in callbacks that might depend on the return value of
 // NewSippTree, this is broken out into a separate function to be called
@@ -82,10 +99,102 @@ func (newGuy *SippNode) BuildUI(url string) {
 	if treeComponent == nil {
 		panic("InitTreeComponents must be called before building tree UIs.")
 	}
-	if newGuy.QmlRoot == nil {
-		newGuy.QmlRoot = treeComponent.CreateWindow(nil)
-		newGuy.QmlRoot.Set("title", url)
-		newGuy.QmlRoot.Call("setThumbSource", url)
-		newGuy.QmlRoot.Show()
+	if newGuy.QmlNode == nil {
+		newGuy.QmlNode = treeComponent.CreateWindow(nil)
+		if xBase == 0 {
+			xBase = newGuy.QmlNode.Int("x")
+			yBase = newGuy.QmlNode.Int("y")
+		} else {
+			xBase += 40
+			yBase += 40
+			newGuy.QmlNode.Set("x", xBase)
+			newGuy.QmlNode.Set("y", yBase)
+		}
+		newGuy.QmlNode.Set("title", url)
+		newGuy.QmlNode.Call("setThumbSource", url)
+		newGuy.QmlNode.On("focusChanged", findWindowWithFocus)
+		newGuy.QmlNode.On("thumbClicked", thumbClicked)
+		newGuy.QmlNode.Show()
 	}
+}
+
+var trees []*SippNode = make([]*SippNode, 10)
+
+var currentTreeRootIndex int
+
+func NewTree (url string) {
+	firstFree := findFirstFreeTreeSlot()
+		//fmt.Println("New Tree: first free index: ", firstFree)
+	trees[firstFree] = NewSippTree(url)
+	if trees[firstFree] == nil {
+		// NewSippTree will have logged an error, so just return
+		return
+	}
+	currentTreeRootIndex = firstFree
+	trees[currentTreeRootIndex].BuildUI(url)
+}
+
+func findFirstFreeTreeSlot() int {
+	// If the current one isn't filled yet, we're done
+	if trees[currentTreeRootIndex] == nil {
+		return currentTreeRootIndex
+	}
+	curLen := len(trees)
+	// Are there any other slots available? Return the first one
+	for i := currentTreeRootIndex; i < curLen; i++ {
+		if trees[i] == nil {
+			return i
+		}
+	}
+	// Expand the slice and return the index of the first new slot
+	temp := make([]*SippNode, cap(trees)+10)
+	copy(temp, trees)
+	trees = temp
+	return curLen // Index of first available
+}
+
+func (victim *SippNode) Close() {
+	victim.QmlNode.Destroy()
+	if victim.QmlImage != nil {
+		victim.QmlImage.Destroy()
+	}
+}
+
+func CloseTree() {
+	//fmt.Println("closing tree at index: ", currentTreeRootIndex)
+	trees[currentTreeRootIndex].Close()
+	// Use copy and nil out everything after the copy
+	moved := copy(trees[currentTreeRootIndex:], trees[currentTreeRootIndex+1:])
+	trees[currentTreeRootIndex+moved] = nil
+	findWindowWithFocus()
+}
+
+// TODO: This doesn't deal with image windows. When an image window has focus,
+// it chooses the first tree. Need an explicit nill, I think.
+func findWindowWithFocus() (bool, int) {
+	//fmt.Println("Finding window with focus")
+	// Now find which one got focus in the UI and set current
+	for i := 0; i < len(trees) && trees[i] != nil; i++ {
+		if trees[i].QmlNode.Bool("active") == true {
+			currentTreeRootIndex = i
+			return true, 0
+		}
+	}
+	currentTreeRootIndex = 0 // TODO: maybe separate first from none, explicitly?
+	return true, 0
+}
+
+func thumbClicked() {
+	if trees[currentTreeRootIndex].QmlImage == nil {
+		trees[currentTreeRootIndex].QmlImage = srcImageComponent.CreateWindow(nil)
+		trees[currentTreeRootIndex].QmlImage.Call("open", "image://src/")
+	}
+}
+
+func SrcProvider(srcName string, width, height int) image.Image {
+	return trees[currentTreeRootIndex].Src[0]
+}
+
+func ThumbProvider(srcName string, width, height int) image.Image {
+	return trees[currentTreeRootIndex].Src[0].Thumbnail()
 }
