@@ -8,7 +8,8 @@ ApplicationWindow {
 
     title: "SIPP"
 
-    // Hack to make the top window invisible.
+    // Hack to make the top window invisible. But it shouldn't be anyway,
+    // according to the QML docs.
     width: 1
     height: 1
     

@@ -113,7 +113,8 @@ func (newGuy *SippNode) BuildUI(url string) {
 		newGuy.QmlNode.Set("title", url)
 		newGuy.QmlNode.Call("setThumbSource", url)
 		newGuy.QmlNode.On("focusChanged", findWindowWithFocus)
-		newGuy.QmlNode.On("thumbClicked", thumbClicked)
+		newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
+		newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
 		newGuy.QmlNode.Show()
 	}
 }
@@ -184,11 +185,16 @@ func findWindowWithFocus() (bool, int) {
 	return true, 0
 }
 
-func thumbClicked() {
-	if trees[currentTreeRootIndex].QmlImage == nil {
-		trees[currentTreeRootIndex].QmlImage = srcImageComponent.CreateWindow(nil)
-		trees[currentTreeRootIndex].QmlImage.Call("open", "image://src/")
+func (victim *SippNode) thumbClicked() {
+	if victim.QmlImage == nil {
+		victim.QmlImage = srcImageComponent.CreateWindow(nil)
+		victim.QmlImage.Call("open", "image://src/")
 	}
+}
+
+// These have to be able to take a receiver, or this whole thing doesn't work.
+func (victim *SippNode) gradientClicked() {
+	fmt.Println("I'ma do you a gradient!")
 }
 
 func SrcProvider(srcName string, width, height int) image.Image {

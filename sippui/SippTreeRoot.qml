@@ -1,4 +1,6 @@
 import QtQuick 2.2
+import QtQuick.Controls 1.1
+import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 
@@ -26,10 +28,21 @@ Window {
         }
 	}
 
-	Text { id: myText }
+        Button {
+            text: "Gradient"
+            style: ButtonStyle { }
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            onClicked: newSippTree.gradientClicked()
+        }
     
-    signal focusChanged()
     signal thumbClicked()
+    signal gradientClicked()
+        
+	Text { 
+		id: myText
+		anchors.bottom: parent.bottom
+	}
     
     onActiveChanged: {
     	if (active) {
@@ -43,5 +56,7 @@ Window {
 		}
     	newSippTree.focusChanged()
     }
+
+	signal focusChanged()
 
 }
