@@ -69,7 +69,6 @@ func run() error {
 	app = appComponent.CreateWindow(nil)
 	app.On("gotFile", stree.NewTree)
 	app.On("closeCurrentTree", stree.CloseTree)
-	app.Show()
 
 	if len(*srcName) > 0 {
 		stree.NewTree(*srcName)

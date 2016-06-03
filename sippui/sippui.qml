@@ -3,19 +3,24 @@ import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 
+// TODO: Try making each window it's own application window, with slightly
+// different menubars for the two types. Then each action can be tied to
+// a receiver function and we can leave tracking the current window to the
+// window system, where it belongs.
+
 ApplicationWindow {
 	id: app
 
     title: "SIPP"
 
-    // Hack to make the top window invisible. But it shouldn't be anyway,
-    // according to the QML docs.
+    // Hack to make the top window invisible. But it shouldn't be visible
+    // anyway, according to the QML docs.
     width: 1
     height: 1
     
     x: Screen.width/2 - 100
     y: Screen.height/4
-
+    
     menuBar: MenuBar {
     	id: appMenuBar
         Menu {
