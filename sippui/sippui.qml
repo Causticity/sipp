@@ -81,14 +81,15 @@ ApplicationWindow {
         title: "Select a Greyscale image (8- or 16-bit)"
         onAccepted: {
 	    	// The URL comes back with a "file://" prefix, so we remove that.
-	    	app.gotFile(srcFileDialog.fileUrl.toString().substring(6))
+	    	//app.gotFile(srcFileDialog.fileUrl.toString().substring(6))
+	    	app.gotFile(srcFileDialog.fileUrl)
 	    }
     }
     
     // These indirections are necessary because I can't seem to get access to 
     // the FileDialog object from Go.
     
-	signal gotFile(string filename) 
+	signal gotFile(url name) 
 	
     function getFile() {
     	srcFileDialog.open()

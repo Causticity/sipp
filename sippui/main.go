@@ -76,6 +76,8 @@ func run() error {
 		app.Call("getFile")
 	}
 
+	// This Show() is necessary, or the app hangs when quitting. Weird.
+	app.Show()
 	app.Wait()
 
 	return nil

@@ -28,13 +28,13 @@ Window {
         }
 	}
 
-        Button {
-            text: "Gradient"
-            style: ButtonStyle { }
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            onClicked: newSippTree.gradientClicked()
-        }
+	Button {
+		text: "Gradient"
+		style: ButtonStyle { }
+		anchors.right: parent.right
+		anchors.verticalCenter: parent.verticalCenter
+		onClicked: newSippTree.gradientClicked()
+	}
     
     signal thumbClicked()
     signal gradientClicked()
