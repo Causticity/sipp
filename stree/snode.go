@@ -6,8 +6,9 @@ package stree
 
 import (
     "fmt"
-    //"image"
+    "image"
     "path/filepath"
+    
 	"gopkg.in/qml.v1"
 
 	. "github.com/Causticity/sipp/simage"
@@ -74,8 +75,14 @@ func InitTreeComponents(engine *qml.Engine) error {
 		return err
 	}
 	
+	engine.AddImageProvider("thumb", thumbProvider)
+	engine.AddImageProvider("src", srcProvider)
+
+
 	return err
 }
+
+var nodeMap = make(map[string]*SippNode)
 
 // NewSippRootNode initialises a new root SippNode by loading the given file. 
 // Returns nil on error.
@@ -91,8 +98,19 @@ func NewSippRootNode(url string) *SippNode {
 		return nil
 	}
 	newGuy.Params = url
-	newGuy.Name = filepath.Base(url)
+	newGuy.Name = uniquefy(filepath.Base(url))
+	nodeMap[newGuy.Name] = newGuy
 	return newGuy
+}
+
+func uniquefy (id string) string {
+	unique := id
+	i := 1
+	for _, ok := nodeMap[id]; ok; _, ok = nodeMap[unique] {
+		unique = id + "-" + fmt.Sprint(i)
+		i++
+	}
+	return unique
 }
 
 var xBase, yBase int
@@ -119,7 +137,7 @@ func (newGuy *SippNode) BuildUI(url string) {
 			newGuy.QmlNode.Set("y", yBase)
 		}
 		newGuy.QmlNode.Set("title", newGuy.Name)
-		newGuy.QmlNode.Call("setThumbSource", url)
+		newGuy.QmlNode.Call("setThumbSource", newGuy.Name)
 		newGuy.QmlNode.On("focusChanged", findWindowWithFocus)
 		newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
 		newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
@@ -127,22 +145,39 @@ func (newGuy *SippNode) BuildUI(url string) {
 	}
 }
 
-func (victim *SippNode) Close() {
-	victim.QmlNode.Destroy()
+func (victim *SippNode) CloseImage() {
 	if victim.QmlImage != nil {
 		victim.QmlImage.Destroy()
+		victim.QmlImage = nil
 	}
+}
+
+func (victim *SippNode) Close() {
+	// First destroy all the Children, recursively
+	if victim.Children != nil {
+		for _, child := range victim.Children {
+			child.Close()
+		}
+	}
+	victim.CloseImage()
+	victim.QmlNode.Destroy()
 }
 
 func (victim *SippNode) thumbClicked() {
 	if victim.QmlImage == nil {
 		victim.QmlImage = srcImageComponent.CreateWindow(nil)
-		victim.QmlImage.Call("open", "image://src/")
+		victim.QmlImage.Call("open", victim.Name)
 	}
 }
 
-// These have to be able to take a receiver, or this whole thing doesn't work.
 func (victim *SippNode) gradientClicked() {
 	fmt.Println("I'ma do you a gradient!")
 }
 
+func srcProvider(srcName string, width, height int) image.Image {
+	return nodeMap[srcName].Src[0]
+}
+
+func thumbProvider(srcName string, width, height int) image.Image {
+	return nodeMap[srcName].Src[0].Thumbnail()
+}

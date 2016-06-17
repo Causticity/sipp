@@ -6,7 +6,6 @@ package stree
 
 import (
     //"fmt"
-    "image"
 )
 
 var trees []*SippNode = make([]*SippNode, 10)
@@ -77,17 +76,4 @@ func findWindowWithFocus() (bool, int) {
 	}
 	currentTreeRootIndex = 0 // TODO: maybe separate first from none, explicitly?
 	return true, 0
-}
-
-// The image-provider mechanism gets in the way of hooking the images up to
-// the corresponding UI elements. Solution: Use a map of nodes with a
-// guaranteed-unique version of the image name as the map key. Then the image
-// source in the UI can include the key, so that when the name is passed to
-// the providers below they can look up the correct node.
-func SrcProvider(srcName string, width, height int) image.Image {
-	return trees[currentTreeRootIndex].Src[0]
-}
-
-func ThumbProvider(srcName string, width, height int) image.Image {
-	return trees[currentTreeRootIndex].Src[0].Thumbnail()
 }

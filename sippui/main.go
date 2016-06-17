@@ -53,8 +53,6 @@ var app *qml.Window
 
 func run() error {
 	engine := qml.NewEngine()
-	engine.AddImageProvider("thumb", stree.ThumbProvider)
-	engine.AddImageProvider("src", stree.SrcProvider)
 
 	appComponent, err := engine.LoadFile("sippui.qml")
 	if err != nil {
