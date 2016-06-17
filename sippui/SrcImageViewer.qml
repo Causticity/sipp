@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 import QtQuick 2.2
 import QtQuick.Window 2.1
 

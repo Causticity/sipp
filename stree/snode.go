@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 // Package stree provides a SippNode class for organising SIPP images,
 // properties, and operations, as well as functions and variables for managing
 // the list of trees. This file contains code for SippNodes.

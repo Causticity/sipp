@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 package main
 
 import (

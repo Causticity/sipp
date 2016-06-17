@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 // Package simage implements a polymorphic wrapper around Gray and Gray16 images
 // from the Go standard library (http://golang.org/pkg/image/), for use by the
 // rest of the SIPP library.

@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 // Package sgrad provides facilities for the computation and rendering of
 // a finite-difference gradient image from a source SippImage.
 package sgrad

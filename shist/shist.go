@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 // Package shist provides functions for computing and rendering a 2-dimensional
 // histogram of values of a complex gradient image, as well as a 2D Entropy
 // calculation based on the histogram.

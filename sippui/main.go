@@ -1,3 +1,5 @@
+// Copyright Raul Vera 2015-2016
+
 // First hacky attempt at getting a UI up and running. This currently doesn't do
 // anything useful at all.
 package main
