@@ -88,7 +88,10 @@ var nodeMap = make(map[string]*SippNode)
 
 // NewSippRootNode initialises a new root SippNode by loading the given file. 
 // Returns nil on error.
-func NewSippRootNode(url string) *SippNode {
+func NewSippRootNode(url string) {
+	if treeComponent == nil {
+		panic("InitTreeComponents must be called before building tree UIs.")
+	}
 	newGuy := new(SippNode)
 	newGuy.Src = make([]SippImage,1)
 	var err error
@@ -97,12 +100,27 @@ func NewSippRootNode(url string) *SippNode {
 	newGuy.Src[0], err = Read(&filename)
 	if err != nil {
 		fmt.Println("Error reading image:", err)
-		return nil
+		return
 	}
 	newGuy.Params = url
 	newGuy.Name = uniquefy(filepath.Base(url))
 	nodeMap[newGuy.Name] = newGuy
-	return newGuy
+		newGuy.QmlNode = treeComponent.CreateWindow(nil)
+		if xBase == 0 {
+			xBase = newGuy.QmlNode.Int("x")
+			yBase = newGuy.QmlNode.Int("y")
+		} else {
+			xBase += 40
+			yBase += 40
+			newGuy.QmlNode.Set("x", xBase)
+			newGuy.QmlNode.Set("y", yBase)
+		}
+		newGuy.QmlNode.Set("title", newGuy.Name)
+		newGuy.QmlNode.Call("setThumbSource", newGuy.Name)
+		newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
+		newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
+		newGuy.QmlNode.On("closing", newGuy.Close)
+		newGuy.QmlNode.Show()
 }
 
 func uniquefy (id string) string {
@@ -123,29 +141,10 @@ var xBase, yBase int
 // once the node is obtained from NewSippTree. Panics if InitTreeComponents
 // has not been called. Can be called multiple times on the same object; if a
 // window already exists, this does nothing.
-func (newGuy *SippNode) BuildUI(url string) {
-	if treeComponent == nil {
-		panic("InitTreeComponents must be called before building tree UIs.")
-	}
-	if newGuy.QmlNode == nil {
-		newGuy.QmlNode = treeComponent.CreateWindow(nil)
-		if xBase == 0 {
-			xBase = newGuy.QmlNode.Int("x")
-			yBase = newGuy.QmlNode.Int("y")
-		} else {
-			xBase += 40
-			yBase += 40
-			newGuy.QmlNode.Set("x", xBase)
-			newGuy.QmlNode.Set("y", yBase)
-		}
-		newGuy.QmlNode.Set("title", newGuy.Name)
-		newGuy.QmlNode.Call("setThumbSource", newGuy.Name)
-		newGuy.QmlNode.On("focusChanged", findWindowWithFocus)
-		newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
-		newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
-		newGuy.QmlNode.Show()
-	}
-}
+//func (newGuy *SippNode) BuildUI(url string) {
+//	if newGuy.QmlNode == nil {
+//	}
+//}
 
 func (victim *SippNode) CloseImage() {
 	if victim.QmlImage != nil {
@@ -163,6 +162,7 @@ func (victim *SippNode) Close() {
 	}
 	victim.CloseImage()
 	victim.QmlNode.Destroy()
+	delete (nodeMap, victim.Name)
 }
 
 func (victim *SippNode) thumbClicked() {

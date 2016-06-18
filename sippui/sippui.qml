@@ -50,31 +50,31 @@ ApplicationWindow {
             //	objectName: "saveImage"
             //	enabled: false
             //}
-            MenuItem {
-            	text: "Close Tree"
-                shortcut: StandardKey.Close
-            	objectName: "closeTree"
-            	onTriggered: {
-            		// Really needs an "Are you sure?" dialog
-            		app.closeCurrentTree()
-            	}
-            	enabled: true
-            }
-            MenuItem {
-            	text: "Close Image"
-                shortcut: StandardKey.Close
-            	objectName: "closeImage"
-            	onTriggered: {
-            		// Really needs an "Are you sure?" dialog
-            		app.closeCurrentImage()
-            	}
-            	enabled: false
-            }
+            //MenuItem {
+            //	text: "Close Tree"
+            //    shortcut: StandardKey.Close
+            //	objectName: "closeTree"
+            //	onTriggered: {
+            //		// Really needs an "Are you sure?" dialog
+            //		app.closeCurrentTree()
+            //	}
+            //	enabled: true
+            //}
+            //MenuItem {
+            //	text: "Close Image"
+            //   shortcut: StandardKey.Close
+            //	objectName: "closeImage"
+            //	onTriggered: {
+            //		// Really needs an "Are you sure?" dialog
+            //		app.closeCurrentImage()
+            //	}
+            //	enabled: false
+            //}
 			enabled: true
         }
     }
 
-    signal closeCurrentTree()
+    //signal closeCurrentTree()
     
 	FileDialog {
         id: srcFileDialog

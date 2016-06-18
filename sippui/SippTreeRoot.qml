@@ -6,7 +6,7 @@ import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 
-Window {    
+ApplicationWindow {    
     width: 500
     height: 500
     

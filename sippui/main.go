@@ -67,11 +67,11 @@ func run() error {
 	}
 
 	app = appComponent.CreateWindow(nil)
-	app.On("gotFile", stree.NewTree)
-	app.On("closeCurrentTree", stree.CloseTree)
+	app.On("gotFile", stree.NewSippRootNode)
+	//app.On("closeCurrentTree", stree.CloseTree)
 
 	if len(*srcName) > 0 {
-		stree.NewTree(*srcName)
+		stree.NewSippRootNode(*srcName)
 	} else {
 		app.Call("getFile")
 	}
