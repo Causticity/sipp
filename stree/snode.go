@@ -105,22 +105,22 @@ func NewSippRootNode(url string) {
 	newGuy.Params = url
 	newGuy.Name = uniquefy(filepath.Base(url))
 	nodeMap[newGuy.Name] = newGuy
-		newGuy.QmlNode = treeComponent.CreateWindow(nil)
-		if xBase == 0 {
-			xBase = newGuy.QmlNode.Int("x")
-			yBase = newGuy.QmlNode.Int("y")
-		} else {
-			xBase += 40
-			yBase += 40
-			newGuy.QmlNode.Set("x", xBase)
-			newGuy.QmlNode.Set("y", yBase)
-		}
-		newGuy.QmlNode.Set("title", newGuy.Name)
-		newGuy.QmlNode.Call("setThumbSource", newGuy.Name)
-		newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
-		newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
-		newGuy.QmlNode.On("closing", newGuy.Close)
-		newGuy.QmlNode.Show()
+	newGuy.QmlNode = treeComponent.CreateWindow(nil)
+	if xBase == 0 {
+		xBase = newGuy.QmlNode.Int("x")
+		yBase = newGuy.QmlNode.Int("y")
+	} else {
+		xBase += 40
+		yBase += 40
+		newGuy.QmlNode.Set("x", xBase)
+		newGuy.QmlNode.Set("y", yBase)
+	}
+	newGuy.QmlNode.Set("title", newGuy.Name)
+	newGuy.QmlNode.Call("setThumbSource", newGuy.Name)
+	newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
+	newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
+	newGuy.QmlNode.On("closing", newGuy.Close)
+	newGuy.QmlNode.Show()
 }
 
 func uniquefy (id string) string {
@@ -134,17 +134,6 @@ func uniquefy (id string) string {
 }
 
 var xBase, yBase int
-
-// BuildUI sets up the QML elements for this tree. As some of the setup done
-// here can result in callbacks that might depend on the return value of
-// NewSippTree, this is broken out into a separate function to be called
-// once the node is obtained from NewSippTree. Panics if InitTreeComponents
-// has not been called. Can be called multiple times on the same object; if a
-// window already exists, this does nothing.
-//func (newGuy *SippNode) BuildUI(url string) {
-//	if newGuy.QmlNode == nil {
-//	}
-//}
 
 func (victim *SippNode) CloseImage() {
 	if victim.QmlImage != nil {

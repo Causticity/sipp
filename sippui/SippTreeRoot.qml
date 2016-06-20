@@ -41,24 +41,56 @@ ApplicationWindow {
     signal thumbClicked()
     signal gradientClicked()
         
-	Text { 
-		id: myText
-		anchors.bottom: parent.bottom
-	}
-    
-    onActiveChanged: {
-    	if (active) {
-    		myText.text = "I have active focus and " + (activeFocusItem==null ? 
-    			"there is not an activeFocusItem" : "there IS an activeFocusItem")
-    		//if (activeFocusItem != null) {
-    		//	newSippTree.parent.menuBar.closeMenuItem.text = "Close Tree"
-    		//}
-    	} else {
-    		myText.text = "I do not have active focus"
-		}
-    	newSippTree.focusChanged()
+    menuBar: MenuBar {
+    	id: nodeMenuBar
+        Menu {
+	        title: "File"
+//            MenuItem { 
+ //           	text: "New Tree" 
+  //          	shortcut: StandardKey.New
+   //         	objectName: "newTree"
+    //        	onTriggered: app.getFile()
+     //       	enabled: true
+      //      }
+            MenuItem {
+            	text: "Close Tree"
+                shortcut: StandardKey.Close
+            	objectName: "closeTree"
+            	onTriggered: {
+            		newSippTree.close()
+            	}
+            	enabled: true
+            }
+            //MenuItem {
+            //	text: "Open Tree"
+            //	shortcut: StandardKey.Open
+            //	objectName: "openTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Tree"
+            //	objectName: "saveTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Image"
+            //	objectName: "saveImage"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Close Image"
+            //   shortcut: StandardKey.Close
+            //	objectName: "closeImage"
+            //	onTriggered: {
+            //		// Really needs an "Are you sure?" dialog
+            //		app.closeCurrentImage()
+            //	}
+            //	enabled: false
+            //}
+			enabled: true
+        }
     }
-
-	signal focusChanged()
-
+    
+    
+    
 }

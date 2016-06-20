@@ -68,7 +68,6 @@ func run() error {
 
 	app = appComponent.CreateWindow(nil)
 	app.On("gotFile", stree.NewSippRootNode)
-	//app.On("closeCurrentTree", stree.CloseTree)
 
 	if len(*srcName) > 0 {
 		stree.NewSippRootNode(*srcName)
