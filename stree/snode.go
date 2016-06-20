@@ -163,6 +163,23 @@ func (victim *SippNode) thumbClicked() {
 
 func (victim *SippNode) gradientClicked() {
 	fmt.Println("I'ma do you a gradient!")
+	/*
+	// This will become a parameter to the gradient op.
+	k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
+						 "The histogram will be 2K+1 bins on a side.\n"+
+						 "        This is used only for 16-bit images.\n"+
+						 "        If K is omitted, it is computed from "+
+						 "the maximum excursion of the gradient.\n"+
+						 "        8-bit images always use a 511x511 histogram, "+
+						 "as that covers the entire possible space.")
+
+	// This test will move to the gradient op. Specifically, it won't be 
+	// manipulable in the UI for 8-bit images, but it will be displayed.
+	if src.Bpp() == 8 {
+		*k = 255
+		fmt.Println("Image is 8-bit. K forced to 255.")
+	}
+	*/
 }
 
 func srcProvider(srcName string, width, height int) image.Image {
