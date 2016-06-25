@@ -120,6 +120,7 @@ func NewSippRootNode(url string) {
 	newGuy.QmlNode.On("thumbClicked", newGuy.thumbClicked)
 	newGuy.QmlNode.On("gradientClicked", newGuy.gradientClicked)
 	newGuy.QmlNode.On("closing", newGuy.Close)
+	newGuy.QmlNode.On("gotFile", NewSippRootNode)
 	newGuy.QmlNode.Show()
 }
 
@@ -158,6 +159,7 @@ func (victim *SippNode) thumbClicked() {
 	if victim.QmlImage == nil {
 		victim.QmlImage = srcImageComponent.CreateWindow(nil)
 		victim.QmlImage.Call("open", victim.Name)
+		victim.QmlImage.On("closing", victim.CloseImage)
 	}
 }
 

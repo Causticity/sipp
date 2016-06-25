@@ -6,6 +6,8 @@ import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.0
 import QtQuick.Window 2.1
 
+import "uiComponents"
+
 ApplicationWindow {    
     width: 500
     height: 500
@@ -19,9 +21,16 @@ ApplicationWindow {
 		thumb.source = "image://thumb/" + name
 	}
     
+    SippFileDialog { 
+    	id:nodeFileDialog
+    	onAccepted: {
+    		newSippTree.gotFile(nodeFileDialog.fileUrl)
+    	}
+    }	
+    signal gotFile(url name) 
+
     Image {
     	id: thumb
-    	objectName: "thumb"
         anchors.centerIn: parent
         cache: false
     	MouseArea {
@@ -45,13 +54,13 @@ ApplicationWindow {
     	id: nodeMenuBar
         Menu {
 	        title: "File"
-//            MenuItem { 
- //           	text: "New Tree" 
-  //          	shortcut: StandardKey.New
-   //         	objectName: "newTree"
-    //        	onTriggered: app.getFile()
-     //       	enabled: true
-      //      }
+            MenuItem { 
+           	    text: "New Tree" 
+           	    shortcut: StandardKey.New
+           	    objectName: "newTree"
+           	    onTriggered: nodeFileDialog.open()
+           	    enabled: true
+            }
             MenuItem {
             	text: "Close Tree"
                 shortcut: StandardKey.Close
