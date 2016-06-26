@@ -9,8 +9,9 @@ import QtQuick.Window 2.1
 import "uiComponents"
 
 ApplicationWindow {    
-    width: 500
-    height: 500
+    width: thumb.width + thumb.anchors.margins + 
+    	   gradButton.width + 2*gradButton.anchors.margins
+    height: thumb.height + 2*thumb.anchors.margins
     
     x: Screen.width/15
     y: Screen.height/15
@@ -31,7 +32,9 @@ ApplicationWindow {
 
     Image {
     	id: thumb
-        anchors.centerIn: parent
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+    	anchors.margins: 3
         cache: false
     	MouseArea {
         	anchors.fill: parent
@@ -40,10 +43,12 @@ ApplicationWindow {
 	}
 
 	Button {
+		id: gradButton
 		text: "Gradient"
 		style: ButtonStyle { }
-		anchors.right: parent.right
-		anchors.verticalCenter: parent.verticalCenter
+		anchors.left: thumb.right
+		anchors.margins: 3
+		//anchors.verticalCenter: parent.verticalCenter
 		onClicked: newSippTree.gradientClicked()
 	}
     
