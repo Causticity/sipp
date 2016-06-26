@@ -1,9 +1,13 @@
 // Copyright Raul Vera 2015-2016
 
 import QtQuick 2.2
+import QtQuick.Controls 1.4
 import QtQuick.Window 2.1
 
-Window {
+ApplicationWindow {
+
+	id:src
+
     minimumWidth: srcImage.width
     minimumHeight: srcImage.height
     x: Screen.width/2 - width/2
@@ -25,17 +29,41 @@ Window {
     	requestActivate()
     }
 
-    // TODO: This doesn't work for the standard key, but does for a regular key,
-    // because the app menu catches the key. This is going to have to happen 
-    // from Go.
-	Item {
-		focus: true
-		Keys.onPressed: {
-			if (event.key == StandardKey.Close) {
-				imageViewer.close()
-				event.accepted = true;
-			}
-		}
-	}
-	
+    menuBar: MenuBar {
+    	id: nodeMenuBar
+        Menu {
+	        title: "File"
+            MenuItem { 
+           	    text: "New Tree" 
+           	    shortcut: StandardKey.New
+           	    objectName: "newTree"
+           	    onTriggered: nodeFileDialog.open()
+           	    enabled: true
+            }
+            //MenuItem {
+            //	text: "Open Tree"
+            //	shortcut: StandardKey.Open
+            //	objectName: "openTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Tree"
+            //	objectName: "saveTree"
+            //	enabled: false
+            //}
+            //MenuItem {
+            //	text: "Save Image"
+            //	objectName: "saveImage"
+            //	enabled: false
+            //}
+            MenuItem {
+            	text: "Close Image"
+                shortcut: StandardKey.Close
+            	objectName: "closeImage"
+            	onTriggered: src.close()
+            	enabled: true
+            }
+			enabled: true
+        }
+    }
 }
