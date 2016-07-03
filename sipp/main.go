@@ -113,7 +113,15 @@ func main() {
 		os.Exit (1)
 	}
 	
-	
+	ls := sfft.LogSpectrum(fft)
+	fmt.Println("Log spectrum computed")
+	lsName := *out + "_fft_spectrum.png"
+	err = ls.Write(&lsName)
+	if err != nil {
+		fmt.Println("Error writing fft spectrum image:", err)
+		os.Exit (1)
+	}
+
 	elapsed := time.Since(start)
 	fmt.Println("Elapsed time:" + elapsed.String())
 	

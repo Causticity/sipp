@@ -3,9 +3,9 @@
 package sfft
 
 import (
-//	"image"
+	"image"
 //   "fmt"
-//    "math"
+    "math"
 
     "github.com/runningwild/go-fftw/fftw"
 )
@@ -50,4 +50,26 @@ func FFT(src SippImage) (fft *FFTimage) {
 	fftw.FFT2To(&inPlace, &inPlace)
 	
 	return fft
+}
+
+func LogSpectrum(fft *FFTimage) (SippImage) {
+	spect := new(SippGray)
+	spect.Gray = image.NewGray(fft.Rect)
+	spectPix := spect.Pix()
+	temp := make ([]float64, len(spectPix))
+	var max float64 = 0
+	for index, pix := range fft.Pix {
+		r := real(pix)
+		i := imag(pix)
+		val := math.Log(1 + math.Sqrt(r*r + i*i))
+		if val > max {
+			max = val
+		}
+		temp[index] = val
+	}
+	scale := 255.0 / max
+	for index, pix := range temp {
+		spectPix[index] = uint8(pix*scale)
+	}
+	return spect
 }
