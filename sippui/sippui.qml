@@ -13,10 +13,11 @@ ApplicationWindow {
     title: "SIPP"
     
     // We fiddle the location of the top window to keep it off screen most of
-    // the time, or at least unobtrusively in a corner, and bringing it on
+    // the time, or at least unobtrusively in a corner, and bring it on
     // screen when we open the file dialog. We also make it tiny because it has
     // no content. I wish I could figure out a way to do this without a useless
-    // tiny window.
+    // tiny window. QML does not appear to have a top-level object that can have
+    // an application menu but no window. This is useful only on Mac, but still.
     width: 1
     height: 1
     x: 0

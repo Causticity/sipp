@@ -47,6 +47,7 @@ ApplicationWindow {
 		text: "Gradient"
 		style: ButtonStyle { }
 		anchors.left: thumb.right
+		anchors.top: parent.top
 		anchors.margins: 3
 		//anchors.verticalCenter: parent.verticalCenter
 		onClicked: newSippTree.gradientClicked()

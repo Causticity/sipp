@@ -34,7 +34,11 @@ type SippNode struct {
 	// image(s) for this node.
 	QmlImage *qml.Window
 	
-	// The parameters to the SippOp that got us here.
+	// The parameters to the SippOp that got us here. This is also used to 
+	// store raw base data for nodes that have images only as visualisations
+	// of underlying data. For example, the gradient operation produces a
+	// GradImage (see sgrad.go) and must be rendered to obtain images of the
+	// real and imaginary parts.
 	Params SippOpParams
 	
 	// The nodes that have been derived (and retained) from this node.
