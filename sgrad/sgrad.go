@@ -49,6 +49,7 @@ func Fdgrad(src SippImage) (grad *Gradimage) {
 			grad.Pix[dsti] = complex(re, im)
 			dsti++
 			modsq := re*re + im*im
+			// store the maximum squared value, then take the root afterwards
 			if modsq > grad.MaxMod {
 				grad.MaxMod = modsq
 			}

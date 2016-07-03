@@ -63,4 +63,3 @@ func (comp *Compleximage) Render() (SippImage, SippImage) {
 	return re, im
 }
 
-//func (comp *Compleximage) RenderAndWrite(reName, imName string)
