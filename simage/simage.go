@@ -227,7 +227,12 @@ func scaleDown(src SippImage, dst *image.Gray) {
 			for i := 0; i < hfilter[intx].n; i++ {
 				val = val + src.Val(hfilter[intx].idx+i, inty) * hfilter[intx].weights[i]
 			}
-			intrm.Pix[intrm.PixOffset(intx, inty)] = uint8(math.Floor(val+0.5))
+			val = math.Floor(val+0.5)
+			if val > 255.0 {
+				intrm.Pix[intrm.PixOffset(intx, inty)] = 255
+			} else {
+				intrm.Pix[intrm.PixOffset(intx, inty)] = uint8(val)
+			}
 		}
 	}
 	
