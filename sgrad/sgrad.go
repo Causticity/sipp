@@ -12,14 +12,13 @@ import (
 
 import (
 	. "github.com/Causticity/sipp/simage"
+	. "github.com/Causticity/sipp/scomplex"
 )
 
 // Gradimage stores a gradient image with a complex value at each pixel.
 type Gradimage struct {
-	// The "pixel" data.
-	Pix []complex128
-	// The rectangle defining the bounds of the image.
-	Rect image.Rectangle
+	// A Gradimage is a complex image
+	Compleximage
 	// The maximum modulus value that occurs in this image. This is useful
 	// when computing a histogram of the modulus value.
 	MaxMod float64
@@ -60,47 +59,3 @@ func Fdgrad(src SippImage) (grad *Gradimage) {
 	return
 }
 
-// Render the real and imaginary parts of the gradient image as separate 
-// 8-bit grayscale images.
-func (grad *Gradimage) Render() (SippImage, SippImage) {
-	// TODO: Store these in Gradimage and compute them as the image is
-	// 		 generated.
-	// compute max excursions of the real and imag parts
-	var minreal float64 = math.MaxFloat64
-	var minimag float64 = math.MaxFloat64
-	var maxreal float64 = -math.MaxFloat64
-	var maximag float64 = -math.MaxFloat64
-	for _, pix := range grad.Pix {
-		re := real(pix)
-		im := imag(pix)
-		if re < minreal {
-			minreal = re
-		}
-		if re > maxreal {
-			maxreal = re
-		}
-		if im < minimag {
-			minimag = im
-		}
-		if im > maximag {
-			maximag = im
-		}
-	}
-	// compute scale and offset for each image
-	rscale := 255.0 / (maxreal - minreal)
-	iscale := 255.0 / (maximag - minimag)
-	re := new(SippGray)
-	re.Gray = image.NewGray(grad.Rect)
-	im := new(SippGray)
-	im.Gray = image.NewGray(grad.Rect)
-	// scan the complex image, generating the two renderings
-	rePix := re.Pix()
-	imPix := im.Pix()
-	for index, pix := range grad.Pix {
-		r := real(pix)
-		i := imag(pix)
-		rePix[index] = uint8((r - minreal)*rscale)
-		imPix[index] = uint8((i - minimag)*iscale)
-	}
-	return re, im
-}

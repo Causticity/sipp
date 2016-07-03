@@ -13,6 +13,7 @@ import (
 	"github.com/Causticity/sipp/simage"
     "github.com/Causticity/sipp/sgrad"
     "github.com/Causticity/sipp/shist"
+    "github.com/Causticity/sipp/sfft"
 )
 
 func main() {
@@ -95,6 +96,23 @@ func main() {
 		fmt.Println("Error writing the histogram entropy image", err)
 		os.Exit (1)
 	}
+		
+	fft := sfft.FFT(src)
+	fmt.Println("fft computed; rendering:");
+	re, im = fft.Render()
+	reName = *out + "_fft_real.png"
+	imName = *out + "_fft_imag.png"
+	err = re.Write(&reName)
+	if err != nil {
+		fmt.Println("Error writing real fft image:", err)
+		os.Exit (1)
+	}
+	err = im.Write(&imName)
+	if err != nil {
+		fmt.Println("Error writing imag fft image:", err)
+		os.Exit (1)
+	}
+	
 	
 	elapsed := time.Since(start)
 	fmt.Println("Elapsed time:" + elapsed.String())
