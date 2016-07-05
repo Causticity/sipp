@@ -42,6 +42,65 @@ type Sipphist struct {
 const maxK = 2048
 const kMargin = 8
 
+const histSize8BPP = 255
+const histSize16BPP = 2^16-1
+
+func GreyHist(im SippImage) ([]uint32) {
+	histSize := histSize8BPP
+	if im.Bpp() == 16 {
+		histSize = histSize16BPP
+	}
+	
+	hist := make([] uint32, histSize)
+	imPix := im.Pix()
+	for y := 0; y < im.Bounds().Dy(); y++ {
+		for x:= 0; x < im.Bounds().Dx(); x++ {
+			hist[imPix[im.PixOffset(x, y)]]++
+		}
+	}
+	return hist
+}
+
+// Entropy calculates the conventional entropy of an image.
+func Entropy(im SippImage) (float64, SippImage) {
+	hist := GreyHist(im)
+	total := float64(im.Bounds().Dx()*im.Bounds().Dy())
+	normHist := make([]float64, len(hist))
+		var check float64
+	for i, binVal := range hist {
+		normHist[i] = float64(binVal)/total
+		check = check + normHist[i]
+	}
+	fmt.Println("Normalised histogram sums to ", check)
+	entHist := make ([]float64, len(hist))
+	var ent, maxEnt float64
+	for j, p := range normHist {
+		if p > 0 {
+			entHist[j] = -1.0 * p * math.Log2(p)
+			ent = ent + entHist[j]
+			if entHist[j] > maxEnt {
+				maxEnt = entHist[j]
+			}
+		}
+	}
+	fmt.Println("maxEnt is ", maxEnt)
+	entIm := new(SippGray)
+	entIm.Gray = image.NewGray(im.Bounds())
+	entImPix := entIm.Pix()
+
+	// scale the entropy from (0-maxEnt) to (0-255)
+	scale := 255.0 / maxEnt
+	width := im.Bounds().Dx()
+	imPix := im.Pix()
+	for y := 0; y < im.Bounds().Dy(); y++ {
+		for x := 0; x < width; x++ {
+			entImPix[y*width+x] = 
+				uint8(math.Floor(entHist[imPix[im.PixOffset(x, y)]] * scale))
+		}
+	}
+	return ent, entIm
+}
+
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
 func Hist(grad *Gradimage, k int) (hist *Sipphist) {
@@ -83,14 +142,13 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	return
 }
 
-
 // Entropy returns the 2D entropy of the gradient image, and a greyscale image
 // of the entropy for each histogram bin.
-func (hist *Sipphist) Entropy() (float64, SippImage) {
+func (hist *Sipphist) GradEntropy() (float64, SippImage) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
 	hist.entropy = make([] float64, hist.max+1)
-    total := float64(len(hist.grad.Pix))
+    total := float64(len(hist.grad.Pix)) // Won't work for 16-bit!
     hist.maxEntropy = 0.0
     var ent float64 = 0.0
 	for _, bin := range hist.bin {

@@ -88,14 +88,24 @@ func main() {
 		os.Exit (1)
 	}
 
-	ent, entImg := hist.Entropy()
-	fmt.Println("Entropy of the gradient image:", ent)
-	entName := *out + "_hist_ent.png"
-	err = entImg.Write(&entName)
+	gradEnt, gradEntImg := hist.GradEntropy()
+	fmt.Println("Entropy of the gradient image:", gradEnt)
+	gradEntName := *out + "_grad_ent.png"
+	err = gradEntImg.Write(&gradEntName)
 	if err != nil {
-		fmt.Println("Error writing the histogram entropy image", err)
+		fmt.Println("Error writing the gradient entropy image", err)
 		os.Exit (1)
 	}
+	
+	ent, entImg := shist.Entropy(src)
+	fmt.Println("Conventional entropy of the source image:", ent)
+	entName := *out + "_conv_ent.png"
+	err = entImg.Write(&entName)
+	if err != nil {
+		fmt.Println("Error writing the conventional entropy image", err)
+		os.Exit (1)
+	}
+		
 		
 	fft := sfft.FFT(src)
 	fmt.Println("fft computed; rendering:");
