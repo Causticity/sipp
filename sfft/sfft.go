@@ -60,9 +60,7 @@ func LogSpectrum(fft *FFTimage) (SippImage) {
 	temp := make ([]float64, len(spectPix))
 	var max float64 = 0
 	for index, pix := range fft.Pix {
-		r := real(pix)
-		i := imag(pix)
-		val := math.Log(1 + math.Sqrt(r*r + i*i))
+		val := math.Log(1 + math.Hypot(real(pix), imag(pix)))
 		if val > max {
 			max = val
 		}
