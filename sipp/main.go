@@ -105,8 +105,7 @@ func main() {
 		fmt.Println("Error writing the conventional entropy image", err)
 		os.Exit (1)
 	}
-		
-		
+	
 	fft := sfft.FFT(src)
 	fmt.Println("fft computed; rendering:");
 	re, im = fft.Render()
