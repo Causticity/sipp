@@ -22,23 +22,24 @@ type FFTimage struct {
 func FFT(src SippImage) (fft *FFTimage) {
 	fft = new(FFTimage)
 	fft.Rect = src.Bounds()
-	fft.Pix = make([]complex128, fft.Rect.Dx()*fft.Rect.Dy())
+	width := fft.Rect.Dx()
+	height := fft.Rect.Dy()
+	size := width*height
+	fft.Pix = make([]complex128, size)
 	// Multiply by (-1)^(x+y) while converting the pixels to complex numbers
 	shiftStart := 1.0
-	x := 0
 	shift := shiftStart
-	for i, val := range src.Pix() {
-		fft.Pix[i] = complex(float64(val)*shift, 0)
-		x++
-		if x == fft.Rect.Dx() {
-			x = 0
-			shiftStart = -shiftStart
-			shift = shiftStart
-		} else {
+	i := 0
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			fft.Pix[i] = complex(src.Val(x,y)*shift, 0)
+			i++
 			shift = -shift
 		}
+		shiftStart = -shiftStart
+		shift = shiftStart
 	}
-	
+
 	re, im := fft.Render()
 	reName := "prefftreal.png"
 	re.Write(&reName)

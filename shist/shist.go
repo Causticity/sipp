@@ -43,13 +43,15 @@ const maxK = 2048
 const kMargin = 8
 
 const histSize8BPP = 255
-const histSize16BPP = 2^16-1
+const histSize16BPP = 65535
 
 func GreyHist(im SippImage) ([]uint32) {
 	histSize := histSize8BPP
 	if im.Bpp() == 16 {
 		histSize = histSize16BPP
 	}
+	
+	fmt.Println("GreyHist histogram size is ", histSize)
 	
 	hist := make([] uint32, histSize)
 	imPix := im.Pix()
