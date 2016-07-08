@@ -15,13 +15,13 @@ import (
 	. "github.com/Causticity/sipp/scomplex"
 )
 
-type FFTimage struct {
+type FFTImage struct {
 	ComplexImage
 }
 
-func FFT(src SippImage) (fft *FFTimage) {
+func FFT(src SippImage) (fft *FFTImage) {
 	comp := ToShiftedComplex(src)
-	fft = &FFTimage {*comp}
+	fft = &FFTImage {*comp}
 
 	inPlace := fftw.Array2{[...]int{fft.Rect.Dx(), fft.Rect.Dy()}, fft.Pix}
 	
@@ -30,7 +30,7 @@ func FFT(src SippImage) (fft *FFTimage) {
 	return fft
 }
 
-func LogSpectrum(fft *FFTimage) (SippImage) {
+func LogSpectrum(fft *FFTImage) (SippImage) {
 	spect := new(SippGray)
 	spect.Gray = image.NewGray(fft.Rect)
 	spectPix := spect.Pix()

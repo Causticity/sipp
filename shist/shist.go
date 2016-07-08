@@ -16,9 +16,9 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
-// Sipphist is a 2-dimensional histogram of the values in a complex gradient
+// SippHist is a 2-dimensional histogram of the values in a complex gradient
 // image.
-type Sipphist struct {
+type SippHist struct {
 	// A reference to the gradient image we are computing from
 	grad *Gradimage
 	// The size of our histogram. It will be 2*k+1 on a side.
@@ -105,7 +105,7 @@ func Entropy(im SippImage) (float64, SippImage) {
 
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
-func Hist(grad *Gradimage, k int) (hist *Sipphist) {
+func Hist(grad *Gradimage, k int) (hist *SippHist) {
 	if k == 0 {
 		if grad.MaxMod > maxK {
 			k = maxK
@@ -115,7 +115,7 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 	}
 	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
-	hist = new(Sipphist)
+	hist = new(SippHist)
 	hist.grad = grad
 	hist.k = k
 	stride := 2*k+1
@@ -146,7 +146,7 @@ func Hist(grad *Gradimage, k int) (hist *Sipphist) {
 
 // Entropy returns the 2D entropy of the gradient image, and a greyscale image
 // of the entropy for each histogram bin.
-func (hist *Sipphist) GradEntropy() (float64, SippImage) {
+func (hist *SippHist) GradEntropy() (float64, SippImage) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
 	hist.entropy = make([] float64, hist.max+1)
@@ -191,7 +191,7 @@ func supScale(x, y, k int) float64 {
 // values in the histogram by their distance from the origin. All the values in
 // in the histogram are multiplied by a factor that ranges from 0.0 at the
 // origin to 1.0 at k in any direction from the origin.
-func (hist *Sipphist) Suppress() {
+func (hist *SippHist) Suppress() {
 	if hist.suppressed != nil {
 		return
 	}
@@ -215,7 +215,7 @@ func (hist *Sipphist) Suppress() {
 
 // RenderSuppressed renders the suppressed version of the histogram and returns
 // the result as an 8-bit grayscale image.
-func (hist *Sipphist) RenderSuppressed() SippImage {
+func (hist *SippHist) RenderSuppressed() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
@@ -233,7 +233,7 @@ func (hist *Sipphist) RenderSuppressed() SippImage {
 
 // Render renders the histogram by clipping all values to 255. Returns an 8-bit
 // grayscale image.
-func (hist *Sipphist) Render() SippImage {
+func (hist *SippHist) Render() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
 	stride := 2*hist.k+1
