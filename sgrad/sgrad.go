@@ -15,9 +15,9 @@ import (
 	. "github.com/Causticity/sipp/scomplex"
 )
 
-// Gradimage stores a gradient image with a complex value at each pixel.
-type Gradimage struct {
-	// A Gradimage is a complex image
+// GradImage stores a gradient image with a complex value at each pixel.
+type GradImage struct {
+	// A GradImage is a complex image
 	ComplexImage
 	// The maximum modulus value that occurs in this image. This is useful
 	// when computing a histogram of the modulus value.
@@ -28,10 +28,10 @@ type Gradimage struct {
 // narrower and shorter than the original. We'd rather reduce the size of the
 // output image than arbitrarily wrap around or extend the source image, as
 // any such procedure could introduce errors into the statistics.
-func Fdgrad(src SippImage) (grad *Gradimage) {
+func Fdgrad(src SippImage) (grad *GradImage) {
 	// Create the dst image from the bounds of the src
 	srect := src.Bounds()
-	grad = new(Gradimage)
+	grad = new(GradImage)
 	grad.Rect = image.Rect(0,0,srect.Dx()-1,srect.Dy()-1)
 	grad.Pix = make([]complex128, grad.Rect.Dx()*grad.Rect.Dy())
 	grad.MaxMod = 0

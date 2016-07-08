@@ -20,7 +20,7 @@ import (
 // image.
 type SippHist struct {
 	// A reference to the gradient image we are computing from
-	grad *Gradimage
+	grad *GradImage
 	// The size of our histogram. It will be 2*k+1 on a side.
 	k int
 	// The histogram data.
@@ -105,7 +105,7 @@ func Entropy(im SippImage) (float64, SippImage) {
 
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
-func Hist(grad *Gradimage, k int) (hist *SippHist) {
+func Hist(grad *GradImage, k int) (hist *SippHist) {
 	if k == 0 {
 		if grad.MaxMod > maxK {
 			k = maxK
