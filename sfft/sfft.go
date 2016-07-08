@@ -16,36 +16,13 @@ import (
 )
 
 type FFTimage struct {
-	Compleximage
+	ComplexImage
 }
 
 func FFT(src SippImage) (fft *FFTimage) {
-	fft = new(FFTimage)
-	fft.Rect = src.Bounds()
-	width := fft.Rect.Dx()
-	height := fft.Rect.Dy()
-	size := width*height
-	fft.Pix = make([]complex128, size)
-	// Multiply by (-1)^(x+y) while converting the pixels to complex numbers
-	shiftStart := 1.0
-	shift := shiftStart
-	i := 0
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			fft.Pix[i] = complex(src.Val(x,y)*shift, 0)
-			i++
-			shift = -shift
-		}
-		shiftStart = -shiftStart
-		shift = shiftStart
-	}
+	comp := ToShiftedComplex(src)
+	fft = &FFTimage {*comp}
 
-	re, im := fft.Render()
-	reName := "prefftreal.png"
-	re.Write(&reName)
-	imName := "prefftimag.png"
-	im.Write(&imName)
-	
 	inPlace := fftw.Array2{[...]int{fft.Rect.Dx(), fft.Rect.Dy()}, fft.Pix}
 	
 	fftw.FFT2To(&inPlace, &inPlace)

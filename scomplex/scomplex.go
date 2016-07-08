@@ -12,16 +12,42 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
-type Compleximage struct {
+type ComplexImage struct {
 	// The "pixel" data.
 	Pix []complex128
 	// The rectangle defining the bounds of the image.
 	Rect image.Rectangle
 }
 
-// Render the real and imaginary parts of the image as separate 
-// 8-bit grayscale images.
-func (comp *Compleximage) Render() (SippImage, SippImage) {
+// ToShiftedComplex converts the input image into a complex image, multiplying
+// each pixel by (-1)^(x+y), in order for a subsequent FFT to be centred
+// properly.
+func ToShiftedComplex(src SippImage) (comp *ComplexImage) {
+	comp = new(ComplexImage)
+	comp.Rect = src.Bounds()
+	width := comp.Rect.Dx()
+	height := comp.Rect.Dy()
+	size := width*height
+	comp.Pix = make([]complex128, size)
+	// Multiply by (-1)^(x+y) while converting the pixels to complex numbers
+	shiftStart := 1.0
+	shift := shiftStart
+	i := 0
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			comp.Pix[i] = complex(src.Val(x,y)*shift, 0)
+			i++
+			shift = -shift
+		}
+		shiftStart = -shiftStart
+		shift = shiftStart
+	}
+	return
+}
+
+// Render renders the real and imaginary parts of the image as separate 8-bit
+// grayscale images.
+func (comp *ComplexImage) Render() (SippImage, SippImage) {
 	// compute max excursions of the real and imag parts
 	var minreal float64 = math.MaxFloat64
 	var minimag float64 = math.MaxFloat64

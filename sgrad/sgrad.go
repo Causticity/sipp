@@ -18,7 +18,7 @@ import (
 // Gradimage stores a gradient image with a complex value at each pixel.
 type Gradimage struct {
 	// A Gradimage is a complex image
-	Compleximage
+	ComplexImage
 	// The maximum modulus value that occurs in this image. This is useful
 	// when computing a histogram of the modulus value.
 	MaxMod float64
