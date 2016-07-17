@@ -149,13 +149,12 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 	return
 }
 
-// Entropy returns the 2D entropy of the gradient image, and a greyscale image
-// of the entropy for each histogram bin.
-func (hist *SippHist) GradEntropy() (float64, SippImage) {
+// GradEntropy returns the 2D entropy of the gradient image.
+func (hist *SippHist) GradEntropy() (float64) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
 	hist.entropy = make([] float64, hist.max+1)
-    total := float64(len(hist.grad.Pix)) // Won't work for 16-bit!
+    total := float64(len(hist.grad.Pix))
     hist.maxEntropy = 0.0
     var ent float64 = 0.0
 	for _, bin := range hist.bin {
@@ -171,8 +170,21 @@ func (hist *SippHist) GradEntropy() (float64, SippImage) {
 			}
 		}
 	}
-	// Now that we have the table of entropies and the maximum, make a 
+	
+	return ent
+}
+
+// GradEntropyImage returns a greyscale image of the entropy for each histogram
+// bin. GradEntroy must have been called first.
+func (hist *SippHist) GradEntropyImage() (SippImage) {
+	// Ensure that we have the table of entropies and the maximum, make a 
 	// greyscale image of the entropy for each bin.
+	if hist.entropy == nil {
+		fmt.Println("Warning: GradEntropyImage called before computing entropy!")
+		return nil
+	}
+	// TODO: Split this off into a separate function, and add one to render
+	// the entropy at each gradient pixel as well, using the old code.
 	stride := 2*hist.k+1
 	entGray := new(SippGray)
 	entGray.Gray = image.NewGray(image.Rect(0,0,stride,stride))
@@ -182,7 +194,7 @@ func (hist *SippHist) GradEntropy() (float64, SippImage) {
 	for i, val := range hist.bin {
 		entGrayPix[i] = uint8(hist.entropy[val]*scale)
 	}
-	return ent, entGray
+	return entGray
 }
 
 func supScale(x, y, k int) float64 {

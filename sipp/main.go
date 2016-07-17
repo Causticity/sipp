@@ -88,8 +88,9 @@ func main() {
 		os.Exit (1)
 	}
 
-	gradEnt, gradEntImg := hist.GradEntropy()
+	gradEnt := hist.GradEntropy()
 	fmt.Println("Entropy of the gradient image:", gradEnt)
+	gradEntImg := hist.GradEntropyImage()
 	gradEntName := *out + "_grad_ent.png"
 	err = gradEntImg.Write(&gradEntName)
 	if err != nil {
