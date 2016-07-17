@@ -3,6 +3,11 @@
 // Package shist provides functions for computing and rendering a 2-dimensional
 // histogram of values of a complex gradient image, as well as a 2D Entropy
 // calculation based on the histogram.
+// TODO: This now has more than just the 2D histogram: 
+//    - 1-D
+//    - both kinds of entropy
+//   Refactor this along cleaner lines. Some to sgrad.go, some to an entropy
+//   package.
 package shist
 
 import (

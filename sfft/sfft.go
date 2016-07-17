@@ -1,4 +1,7 @@
-// Computes an FFT using fftw
+// Copyright Raul Vera 2015-2016
+
+// Package sfft provides functions to compute an FFT and IFFT using go-fftw, as
+// well as a function for displaying a spectrum as a grey-scale image.
 
 package sfft
 

@@ -21,6 +21,16 @@ type GradImage struct {
 	ComplexImage
 	// The maximum modulus value that occurs in this image. This is useful
 	// when computing a histogram of the modulus value.
+	// TODO: This is actually a property of a ComplexImage, so perhaps should
+	//   go there. It's expensive, though, so should still be computed as the
+	//   ComplexImage is created, or else lazily on demand. Then there is the
+	//   issue of it becoming dirty if direct access to the pixels changes them.
+	//   The only ways I can think of to solve this last are: 
+	//   - make the pixel data slice available only through a function, and
+	//     mark the data dirty every time that function is accessed. This has
+	//     the undesirable consequence of marking the data dirty every time it
+	//     is read, not just written.
+	//   - Compute it on demand every single time. That's expensive. Very.
 	MaxMod float64
 }
 
