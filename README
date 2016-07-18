@@ -7,7 +7,7 @@ http://golang.org/doc/code.html#Workspaces), run
 
 go install github.com/Causticity/sipp/sipp from anywhere.
 
-You will also need to install go-fftw, by following the instruction on it's 
+You will also need to install go-fftw, by following the instructions on it's 
 github page: https://github.com/runningwild/go-fftw
 
 Windows version:
