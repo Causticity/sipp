@@ -13,16 +13,45 @@ github page: https://github.com/runningwild/go-fftw
 Windows version:
 go install github.com\Causticity\sipp\sipp
 
-This will build sipp into the bin directory of the workspace.
+This will build the sipp test program into the bin directory of the workspace.
 
 Then to run it
 
-sipp -in=<path to input image> -out=<prefix for output images>
+sipp -in=<path to input image> -out=<prefix for output images> -a=true
 
 For example, I have an out directory parallel to the standard src, pkg, and bin,
 so I run from the root as follows:
 
-sipp -in=src/github.com/Causticity/sipp/testdata/Lacryma_1024.png -out=out/Lac
+sipp -in=src/github.com/Causticity/sipp/testdata/Lacryma_1024.png -out=out/Lac -a=true
 
 This prepends the various output files with "Lac" and places them in the out
 directory.
+
+Each type of output file has it's own command-line argument, and there is an
+argument to write all of them.
+
+Full usage of sipp:
+  -K int
+    	Number of bins to scale the max radius to. The histogram will be 2K+1 bins on a side.
+        This is used only for 16-bit images.
+        If K is omitted, it is computed from the maximum excursion of the gradient.
+        8-bit images always use a 511x511 histogram, as that covers the entire possible space.
+  -a	Boolean; if true, write all the images
+  -e	Boolean; if true, write a conventional entropy image
+  -f	Boolean; if true, write the fft real and imaginary images
+  -fls
+    	Boolean; if true, write the fft log spectrum image
+  -g	Boolean; if true, write the gradient real and imaginary images
+  -ge
+    	Boolean; if true, write a gradient-entropy image
+  -h	Boolean; if true, write a histogram image
+  -he
+    	Boolean; if true, write a histogram-entropy image
+  -hs
+    	Boolean; if true, write a histogram image with the center spike suppressed
+  -in string
+    	Input image file; must be grayscale png
+  -out string
+    	Output image file prefix
+  -t	Boolean; if true, write a thumbnail image
+
