@@ -1,0 +1,2 @@
+This directory contains test images and this file, which is used to test that
+reading fails correctly when asked to read a file that is not an image.

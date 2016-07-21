@@ -7,12 +7,13 @@
 package simage
 
 import (
+	"errors"
+	//"fmt"
 	"image"
 	// Package image/png is not used explicitly in the code below,
 	// but is imported for its initialization side-effect, which allows
 	// image.Decode to understand PNG formatted images.
 	"image/png"
-	//"fmt"
     "math"
 	"os"
 	"reflect"
@@ -44,6 +45,39 @@ type SippImage interface {
 // A SippGray wraps a Go Gray image and implements the SippImage interface.
 type SippGray struct {
 	*image.Gray
+}
+
+// Read decodes the file named by the given string, returning a SippImage.
+// Currently panics if the image is not grayscale, either 8 or 16 bit.
+func Read(in string) (SippImage, error) {
+	reader, err := os.Open(in)
+	if err != nil {
+		return nil, err
+	}
+
+	defer reader.Close()
+	im, _, err := image.Decode(reader)
+	if err != nil {
+		return nil, err
+	}
+	
+	t := reflect.TypeOf(im)
+	
+	if t == reflect.TypeOf(new(image.Gray)) {
+		g := new(SippGray)
+		g.Gray = im.(*image.Gray)
+		return g, err
+	}
+	
+	if t == reflect.TypeOf(new(image.Gray16)) {
+		g16 := new(SippGray16)
+		g16.Gray16 = im.(*image.Gray16)
+		return g16, err
+	}
+
+	err = errors.New("Input image must be 8-bit or 16-bit grayscale!")
+		
+	return nil, err
 }
 
 // Pix returns the slice of underlying image data, for efficient access.
@@ -80,43 +114,6 @@ func (sg16 *SippGray16) Val(x, y int) float64 {
 // Bpp returns the pixel depth of this image, i.e. 16
 func (sg *SippGray16) Bpp() int {
 	return 16
-}
-
-var grayType = reflect.TypeOf(new(image.Gray))
-var gray16Type = reflect.TypeOf(new(image.Gray16))
-
-// Read decodes the file named by the given string, returning a SippImage.
-// Currently panics if the image is not grayscale, either 8 or 16 bit.
-func Read(in *string) (SippImage, error) {
-	reader, err := os.Open(*in)
-	if err != nil {
-		return nil, err
-	}
-
-	defer reader.Close()
-	im, _, err := image.Decode(reader)
-	if err != nil {
-		return nil, err
-	}
-	
-	t := reflect.TypeOf(im)
-	
-	if t == grayType {
-		g := new(SippGray)
-		g.Gray = im.(*image.Gray)
-		return g, err
-	}
-	
-	if t == gray16Type {
-		g16 := new(SippGray16)
-		g16.Gray16 = im.(*image.Gray16)
-		return g16, err
-	}
-	
-	// TODO: This should be an error return instead of a panic.
-	panic("input image must be 8-bit or 16-bit grayscale!")
-		
-	return nil, err
 }
 
 // Write encodes the image into a PNG of the given name.

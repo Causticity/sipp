@@ -101,7 +101,7 @@ func NewSippRootNode(url string) {
 	var err error
 	// strip off the "file://" prefix by referencing the string from index 7
 	filename := url[7:]
-	newGuy.Src[0], err = Read(&filename)
+	newGuy.Src[0], err = Read(filename)
 	if err != nil {
 		fmt.Println("Error reading image:", err)
 		return

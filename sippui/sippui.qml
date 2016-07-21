@@ -26,8 +26,8 @@ ApplicationWindow {
     SippFileDialog { 
     	id:srcFileDialog
     	onAccepted: {
-    		app.x = -10
-    		app.y = -10
+    		app.x = 0
+    		app.y = 0
     		app.gotFile(srcFileDialog.fileUrl)
     	}
     }	

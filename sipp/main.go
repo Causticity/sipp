@@ -62,7 +62,7 @@ func main() {
 	fmt.Println("input file:<", *in, ">")
 	fmt.Println("output file prefix:<", *out, ">")
 
-	src, err := simage.Read(in)
+	src, err := simage.Read(*in)
 	if err != nil {
 		fmt.Println("Error reading image:", err)
 		os.Exit (1)
