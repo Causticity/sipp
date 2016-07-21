@@ -33,15 +33,31 @@ func TestRead (t *testing.T) {
 	} else {
 		t.Log(err)
 	}
-
 }
 
 func TestGraySippImage (t *testing.T) {
-	// Create a Gray one
-	// Test every method
+	// Read a Gray one
+	_, err := Read(filepath.Join(testDir,"barbara.png"))
+	if err != nil {
+		t.Fatal("Can't read 8-bit test image")
+	}
+	// Pix
+	// Val
+	// Bpp
+	// Write
+	// Thumbnail
 }
 
 func TestGray16SippImage (t *testing.T) {
-	// Create a Gray16 one
+	// Read a Gray16 one
+	_, err := Read(filepath.Join(testDir,"cosxcosy.png"))
+	if err != nil {
+		t.Fatal("Can't read 16-bit test image")
+	}
 	// Test every method
+	// Pix
+	// Val
+	// Bpp
+	// Write
+	// Thumbnail
 }
