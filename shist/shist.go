@@ -49,8 +49,8 @@ type SippHist struct {
 const maxK = 2048
 const kMargin = 8
 
-const histSize8BPP = 255
-const histSize16BPP = 65535
+const histSize8BPP = 256
+const histSize16BPP = 65536
 
 // GreyHist computes a 1D histogram of the greyscale values in the image.
 func GreyHist(im SippImage) ([]uint32) {
