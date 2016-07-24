@@ -16,7 +16,6 @@ import (
 	"image/png"
     "math"
 	"os"
-	"reflect"
 	)
 
 // SippImage embeds the Image interface from the Go standard library and adds
@@ -60,23 +59,23 @@ func Read(in string) (SippImage, error) {
 	if err != nil {
 		return nil, err
 	}
-	
-	t := reflect.TypeOf(im)
-	
-	if t == reflect.TypeOf(new(image.Gray)) {
+
+	gr, ok := im.(*image.Gray)
+	if ok {
 		g := new(SippGray)
-		g.Gray = im.(*image.Gray)
+		g.Gray = gr
 		return g, err
 	}
-	
-	if t == reflect.TypeOf(new(image.Gray16)) {
+
+	gr16, ok := im.(*image.Gray16)
+	if ok {
 		g16 := new(SippGray16)
-		g16.Gray16 = im.(*image.Gray16)
+		g16.Gray16 = gr16
 		return g16, err
 	}
 
 	err = errors.New("Input image must be 8-bit or 16-bit grayscale!")
-		
+	
 	return nil, err
 }
 
