@@ -2,13 +2,14 @@ Simple Image Processing Pipeline
 
 What it says on the tin.
 
+You will need to install go-fftw, by following the instructions on it's 
+github page: https://github.com/runningwild/go-fftw. On Mac this is easy, on 
+Windows not so much.
+
 To build in a default Go workspace (as described in 
 http://golang.org/doc/code.html#Workspaces), run 
 
 go install github.com/Causticity/sipp/sipp from anywhere.
-
-You will also need to install go-fftw, by following the instructions on it's 
-github page: https://github.com/runningwild/go-fftw
 
 Windows version:
 go install github.com\Causticity\sipp\sipp
