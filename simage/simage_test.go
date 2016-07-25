@@ -71,11 +71,11 @@ func TestGraySippImage (t *testing.T) {
 	
 	// Write
 		// write the image out
+		
 		// compare it to the original (might not be byte for byte, though
 		// or
-		// write the image out
 		// read it back in
-		// compare them with a deep copy
+		// compare them with a deep copy (how? With an Equals method!)
 		// if success, delete the written copy
 		// else save the bad output for debugging and notify
 		
