@@ -16,6 +16,7 @@ import (
 	"image/png"
     "math"
 	"os"
+	"reflect"
 	)
 
 // SippImage embeds the Image interface from the Go standard library and adds
@@ -77,6 +78,22 @@ func Read(in string) (SippImage, error) {
 	err = errors.New("Input image must be 8-bit or 16-bit grayscale!")
 	
 	return nil, err
+}
+
+// Equal returns true if all of the following are true, false otherwise:
+// 	- The bit depth of the two images is the same
+//  - The Bounds of the two images are the same
+//  - The pixel data of the two images are the same, per reflect.DeepEqual
+func Equal(this, that SippImage) bool {
+	if (this.Bpp() != that.Bpp()) || (this.Bounds() != that.Bounds()) {
+   	    return false
+	}
+	   
+	if !reflect.DeepEqual(this.Pix(), that.Pix()) {
+		return false
+	}
+	
+	return true
 }
 
 // Pix returns the slice of underlying image data, for efficient access.
