@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	)
 
@@ -70,16 +71,32 @@ func TestGraySippImage (t *testing.T) {
 	}
 	
 	// Write
-		// write the image out
-		
-		// compare it to the original (might not be byte for byte, though
-		// or
-		// read it back in
-		// compare them with a deep copy (how? With an Equals method!)
-		// if success, delete the written copy
-		// else save the bad output for debugging and notify
+	name := filepath.Join(testDir,"test.png")
+	err = barb.Write(&name)
+	if err != nil {
+		t.Fatal("Error writing gray: "+ err.Error())
+	}
+	// read it back in
+	comp, err := Read(name)
+	if err != nil {
+		t.Fatal("Error reading written gray")
+	}
+	if !reflect.DeepEqual(barb, comp) {
+		t.Error("Error: written gray and read differ; written saved as "+ name)
+	} else {
+		err = os.Remove(name)
+	}
 		
 	// Thumbnail
+	thm := barb.Thumbnail()
+	name = filepath.Join(testDir, "barb_thumb.png")
+	gold, err := Read(name)
+	if err != nil {
+		t.Fatal("Error reading golden gray thumb")
+	}
+	if !reflect.DeepEqual(thm, gold) {
+		t.Error("Error: golden gray thumbnail and generated differ")
+	}
 }
 
 func TestGray16SippImage (t *testing.T) {
@@ -111,5 +128,30 @@ func TestGray16SippImage (t *testing.T) {
 	}
 	
 	// Write
+	name := filepath.Join(testDir,"test16.png")
+	err = cc.Write(&name)
+	if err != nil {
+		t.Fatal("Error writing gray16: "+ err.Error())
+	}
+	// read it back in
+	comp, err := Read(name)
+	if err != nil {
+		t.Fatal("Error reading written gray16")
+	}
+	if !reflect.DeepEqual(cc, comp) {
+		t.Error("Error: written gray16 and read differ; written saved as "+ name)
+	} else {
+		err = os.Remove(name)
+	}
+		
 	// Thumbnail
+	thm := cc.Thumbnail()
+	name = filepath.Join(testDir, "cosxcosy_thumb.png")
+	gold, err := Read(name)
+	if err != nil {
+		t.Fatal("Error reading golden gray16 thumb")
+	}
+	if !reflect.DeepEqual(thm, gold) {
+		t.Error("Error: golden gray16 thumbnail and generated differ")
+	}
 }
