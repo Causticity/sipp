@@ -55,8 +55,10 @@ const histSize16BPP = 65536
 // GreyHist computes a 1D histogram of the greyscale values in the image.
 func GreyHist(im SippImage) ([]uint32) {
 	histSize := histSize8BPP
+	is16 := false
 	if im.Bpp() == 16 {
 		histSize = histSize16BPP
+		is16 = true
 	}
 	
 	fmt.Println("GreyHist histogram size is ", histSize)
@@ -65,7 +67,12 @@ func GreyHist(im SippImage) ([]uint32) {
 	imPix := im.Pix()
 	for y := 0; y < im.Bounds().Dy(); y++ {
 		for x:= 0; x < im.Bounds().Dx(); x++ {
-			hist[imPix[im.PixOffset(x, y)]]++
+			index := im.PixOffset(x, y)
+			var val uint16 = uint16(imPix[index])
+			if is16 {
+				val = val << 8 | uint16(imPix[index+1])
+			}
+			hist[val]++
 		}
 	}
 	return hist
