@@ -9,7 +9,7 @@ Windows not so much.
 To build in a default Go workspace (as described in 
 http://golang.org/doc/code.html#Workspaces), run 
 
-go install github.com/Causticity/sipp/sipp from anywhere.
+go install github.com/Causticity/sipp/sipp from anywhere in the workspace.
 
 Windows version:
 go install github.com\Causticity\sipp\sipp
