@@ -1,12 +1,19 @@
 Simple Image Processing Pipeline
 
-What it says on the tin.
+This software consists of a set of packages for building image-processing
+pipelines, as well as a demo program, sipp, that provides all the functions in
+a command-line program.
 
-You will need to install go-fftw, by following the instructions on it's 
-github page: https://github.com/runningwild/go-fftw. On Mac this is easy, on 
-Windows not so much.
+In order to build the demo program you will need to install go-fftw, by 
+following the instructions on it's github page: https://github.com/runningwild/go-fftw.
+On Mac this is easy, on Windows not so much.
 
-To build in a default Go workspace (as described in 
+Note that only the sipp/fftw package and the demo program are under the GPL 
+(http://www.gnu.org/licenses/gpl.html). Therest of the sipp packages are under 
+the default GitHub license. This means that if you import package sipp/sfft, 
+your program is under the GPL. If you don't, it isn't. 
+
+To build the demo program in a default Go workspace (as described in 
 http://golang.org/doc/code.html#Workspaces), run 
 
 go install github.com/Causticity/sipp/sipp from anywhere in the workspace.
@@ -14,7 +21,7 @@ go install github.com/Causticity/sipp/sipp from anywhere in the workspace.
 Windows version:
 go install github.com\Causticity\sipp\sipp
 
-This will build the sipp test program into the bin directory of the workspace.
+This will build the sipp demo program into the bin directory of the workspace.
 
 Then to run it
 

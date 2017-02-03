@@ -1,5 +1,8 @@
 // Copyright Raul Vera 2015-2016
 
+// This program uses go-fftw, which links to FFTW (http://www.fftw.org/). As the
+// FFTW is under the GPL, so is this program.
+
 package main
 
 import (
@@ -20,6 +23,16 @@ func main() {
 
 	start := time.Now()
 
+	flag.Usage = func() {
+        fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+        flag.PrintDefaults()
+        fmt.Println()
+        fmt.Println("This program uses FFTW (http://www.fftw.org/), licensed under the GPL.")
+        fmt.Println("Consequently this program is also licensed under the GPL v3 (http://www.gnu.org/licenses/gpl.html)")
+        fmt.Println("Source code for this program may be found at (https://github.com/Causticity/sipp)")
+        fmt.Println("Programs that do not include the sipp/fftw package, however, do not include FFTW and so are not under the GPL.")
+    }
+		
 	var in = flag.String("in", "", "Input image file; must be grayscale png")
 	var out = flag.String("out", "", "Output image file prefix")
 	var thb = flag.Bool("t", false, "Boolean; if true, write a thumbnail image")
