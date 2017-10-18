@@ -59,8 +59,11 @@ func main() {
 							  "the maximum excursion of the gradient.\n"+
 							  "        8-bit images always use a 511x511 histogram, "+
 							  "as that covers the entire possible space.")
-	var v = flag.Bool("v", true, "Boolean; if true, verbosely report "+
-		                          "everything done")
+	var v = flag.Bool("v", false, "Boolean; if true, verbosely report "+
+		                         "everything done")
+	var csv = flag.Bool("csv", false, "Boolean: if true, write the name of the"+
+									  "image, a comma, and the delentropy,"+
+									  "on a single line.")
 	
 	flag.Parse()
 	if *a {
@@ -153,10 +156,13 @@ func main() {
 	}
 
 	gradEnt := hist.GradEntropy()
-	if *v {
-		fmt.Println("Entropy of the gradient image:", gradEnt)
+	delentropy := gradEnt/2.0
+		
+	if *csv {
+		fmt.Printf("%s,%.2f\n",*in, delentropy)
+	} else {
+		fmt.Println("Delentropy:", delentropy)
 	}
-	
 	if *hse {
 		histEntImg := hist.HistEntropyImage()
 		histEntName := *out + "_hist_ent.png"
