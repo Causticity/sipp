@@ -59,6 +59,9 @@ func main() {
 							  "the maximum excursion of the gradient.\n"+
 							  "        8-bit images always use a 511x511 histogram, "+
 							  "as that covers the entire possible space.")
+	var v = flag.Bool("v", true, "Boolean; if true, verbosely report "+
+		                          "everything done")
+	
 	flag.Parse()
 	if *a {
 		*thb = true
@@ -72,19 +75,25 @@ func main() {
 		*fls = true
 	}
 	
-	fmt.Println("input file:<", *in, ">")
-	fmt.Println("output file prefix:<", *out, ">")
+	if *v {
+		fmt.Println("input file:<", *in, ">")
+		fmt.Println("output file prefix:<", *out, ">")
+	}
 
 	src, err := simage.Read(*in)
 	if err != nil {
 		fmt.Println("Error reading image:", err)
 		os.Exit (1)
 	}
-	fmt.Println("source image read")
+	if *v {
+		fmt.Println("source image read")
+	}
 	
 	if *thb {
 		thumb := src.Thumbnail()
-		fmt.Println("Thumbnail generated")
+		if *v {
+			fmt.Println("Thumbnail generated")
+		}
 		tname := *out + "_thumb.png"
 		err = thumb.Write(&tname)
 		if err != nil {
@@ -95,11 +104,15 @@ func main() {
 	
 	if src.Bpp() == 8 {
 		*k = 255
-		fmt.Println("Image is 8-bit. K forced to 255.")
+		if *v {
+			fmt.Println("Image is 8-bit. K forced to 255.")
+		}
 	}
 	
 	grad := sgrad.Fdgrad(src)
-	fmt.Println("gradient image computed")
+	if *v {
+		fmt.Println("gradient image computed")
+	}
 
 	if *grd {
 		re, im := grad.Render()
@@ -140,7 +153,9 @@ func main() {
 	}
 
 	gradEnt := hist.GradEntropy()
-	fmt.Println("Entropy of the gradient image:", gradEnt)
+	if *v {
+		fmt.Println("Entropy of the gradient image:", gradEnt)
+	}
 	
 	if *hse {
 		histEntImg := hist.HistEntropyImage()
@@ -163,7 +178,9 @@ func main() {
 	}
 	
 	ent, entImg := shist.Entropy(src)
-	fmt.Println("Conventional entropy of the source image:", ent)
+	if *v {
+		fmt.Println("Conventional entropy of the source image:", ent)
+	}
 	
 	if *e {
 		entName := *out + "_conv_ent.png"
@@ -175,7 +192,9 @@ func main() {
 	}
 	
 	fft := sfft.FFT(src)
-	fmt.Println("fft computed");
+	if *v {
+		fmt.Println("fft computed");
+	}
 	
 	if *f {
 		re, im := fft.Render()
@@ -205,6 +224,7 @@ func main() {
 	}
 	
 	elapsed := time.Since(start)
-	fmt.Println("Elapsed time:" + elapsed.String())
-	
+	if *v {
+		fmt.Println("Elapsed time:" + elapsed.String())
+	}
 }

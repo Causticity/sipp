@@ -61,7 +61,7 @@ func GreyHist(im SippImage) ([]uint32) {
 		is16 = true
 	}
 	
-	fmt.Println("GreyHist histogram size is ", histSize)
+	//fmt.Println("GreyHist histogram size is ", histSize)
 	
 	hist := make([] uint32, histSize)
 	imPix := im.Pix()
@@ -88,7 +88,7 @@ func Entropy(im SippImage) (float64, SippImage) {
 		normHist[i] = float64(binVal)/total
 		check = check + normHist[i]
 	}
-	fmt.Println("Normalised histogram sums to ", check)
+	//fmt.Println("Normalised histogram sums to ", check)
 	entHist := make ([]float64, len(hist))
 	var ent, maxEnt float64
 	for j, p := range normHist {
@@ -100,7 +100,7 @@ func Entropy(im SippImage) (float64, SippImage) {
 			}
 		}
 	}
-	fmt.Println("maxEnt is ", maxEnt)
+	//fmt.Println("maxEnt is ", maxEnt)
 	entIm := new(SippGray)
 	entIm.Gray = image.NewGray(im.Bounds())
 	entImPix := entIm.Pix()
@@ -128,7 +128,7 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 			k = int(grad.MaxMod)+kMargin
 		}
 	}
-	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
+	//fmt.Println("K:", k, " histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
 	hist = new(SippHist)
 	hist.grad = grad
@@ -137,7 +137,7 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 	stride := 2*k+1
 	histDataSize := stride*stride
 	hist.bin = make([] uint32, histDataSize)
-	fmt.Println("histogram side:", stride, " data size: ", histDataSize)
+	//fmt.Println("histogram side:", stride, " data size: ", histDataSize)
 	
 	// Walk through the image, computing the bin address from the gradient 
 	// values storing the bin address in binIndex and incrementing the bin.
@@ -146,7 +146,7 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 	if grad.MaxMod > float64(k) {
 	    factor = float64(k) / grad.MaxMod
 	}
-	fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
+	//fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for i, pixel := range grad.Pix {
 		u := int(math.Floor(factor*real(pixel))) + k
 		v := int(math.Floor(factor*imag(pixel))) + k
@@ -156,7 +156,7 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 			hist.max = hist.bin[hist.binIndex[i]]
 		}
 	}
-	fmt.Println("Histogram complete. Maximum bin value:", hist.max)
+	//fmt.Println("Histogram complete. Maximum bin value:", hist.max)
 	return
 }
 
@@ -262,7 +262,7 @@ func (hist *SippHist) Suppress() {
 			index++
 		}
 	}
-	fmt.Println("Distance suppression complete; max suppressed value:", hist.maxSuppressed)
+	//fmt.Println("Distance suppression complete; max suppressed value:", hist.maxSuppressed)
 }
 
 // RenderSuppressed renders the suppressed version of the histogram and returns
@@ -273,7 +273,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 	hist.Suppress()
 	stride := 2*hist.k+1
 	var scale float64 = 255.0 / hist.maxSuppressed
-	fmt.Println("Suppressed Render scale factor:", scale)
+	//fmt.Println("Suppressed Render scale factor:", scale)
 	rnd := new(SippGray)
 	rnd.Gray = image.NewGray(image.Rect(0,0,stride,stride))
 	rndPix := rnd.Pix()
