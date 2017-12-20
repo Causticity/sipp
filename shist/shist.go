@@ -106,13 +106,21 @@ func Entropy(im SippImage) (float64, SippImage) {
 	entImPix := entIm.Pix()
 
 	// scale the entropy from (0-maxEnt) to (0-255)
+	is16 := false
+	if im.Bpp() == 16 {
+		is16 = true
+	}
 	scale := 255.0 / maxEnt
 	width := im.Bounds().Dx()
 	imPix := im.Pix()
 	for y := 0; y < im.Bounds().Dy(); y++ {
 		for x := 0; x < width; x++ {
-			entImPix[y*width+x] = 
-				uint8(math.Floor(entHist[imPix[im.PixOffset(x, y)]] * scale))
+			index := im.PixOffset(x, y)
+			var val uint16 = uint16(imPix[index])
+			if is16 {
+				val = val << 8 | uint16(imPix[index+1])
+			}
+			entImPix[y*width+x] = uint8(math.Floor(entHist[val] * scale))
 		}
 	}
 	return ent, entIm
