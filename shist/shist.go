@@ -169,6 +169,7 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 }
 
 // GradEntropy returns the 2D entropy of the gradient image.
+// This should really be called DelEntropy.
 func (hist *SippHist) GradEntropy() (float64) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
