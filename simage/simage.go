@@ -8,15 +8,10 @@ package simage
 
 import (
 	"errors"
-	//"fmt"
 	"image"
-	// Package image/png is not used explicitly in the code below,
-	// but is imported for its initialization side-effect, which allows
-	// image.Decode to understand PNG formatted images.
 	"image/png"
     "math"
 	"os"
-//	"reflect"
 	)
 
 // SippImage embeds the Image interface from the Go standard library and adds
@@ -25,8 +20,8 @@ type SippImage interface {
 	// Embed the Go image interface to allow reading and writing using the Go 
 	// PNG decoder and encoder.
 	image.Image
-	// Bounded Go images all implement this, though it's not part of the Image
-	// interface.
+	// Bounded Go images all implement PixOffset, though it's not part of the
+	// Image interface, so it's included here.
 	PixOffset(x, y int) int
 	// Pix returns the slice of underlying image data, for efficient access.
 	Pix() []uint8
@@ -36,9 +31,9 @@ type SippImage interface {
 	Bpp() int
 	// Write encodes the image into a PNG of the given name.
 	Write(out *string) error
-	// Thumbnail returns a small version of the image. If the original is
-	// smaller than the thumbnail, the returned image will contain the original,
-	// centered. Thumbnails are always 8-bit Gray images.
+	// Thumbnail returns a small version of the image. Thumbnails are always
+	// 8-bit Gray images. TODO: If the original is smaller than the thumbnail,
+	// the returned image will contain the original, centered. 
 	Thumbnail() SippImage
 }
 
@@ -48,7 +43,7 @@ type SippGray struct {
 }
 
 // Read decodes the file named by the given string, returning a SippImage.
-// Currently panics if the image is not grayscale, either 8 or 16 bit.
+// Returns an Error if the image is not grayscale, either 8 or 16 bit.
 func Read(in string) (SippImage, error) {
 	reader, err := os.Open(in)
 	if err != nil {
@@ -65,14 +60,14 @@ func Read(in string) (SippImage, error) {
 	if ok {
 		g := new(SippGray)
 		g.Gray = gr
-		return g, err
+		return g, nil
 	}
 
 	gr16, ok := im.(*image.Gray16)
 	if ok {
 		g16 := new(SippGray16)
 		g16.Gray16 = gr16
-		return g16, err
+		return g16, nil
 	}
 
 	err = errors.New("Input image must be 8-bit or 16-bit grayscale!")
@@ -85,7 +80,7 @@ func (sg *SippGray) Pix() []uint8 {
 	return sg.Gray.Pix
 }
 
-// Val returns the grayscale value at x, y to a float64.
+// Val returns the grayscale value at x, y as a float64.
 func (sg *SippGray) Val(x, y int) float64 {
 	return float64(sg.Gray.Pix[sg.PixOffset(x,y)])
 }
@@ -105,7 +100,7 @@ func (sg16 *SippGray16) Pix() []uint8 {
 	return sg16.Gray16.Pix
 }
 
-// Val returns the grayscale value at x, y to a float64.
+// Val returns the grayscale value at x, y as a float64.
 func (sg16 *SippGray16) Val(x, y int) float64 {
 	i := sg16.PixOffset(x,y)
 	return float64(uint16(sg16.Gray16.Pix[i+0])<<8 | uint16(sg16.Gray16.Pix[i+1]))
@@ -162,22 +157,14 @@ func thumbnail(src SippImage) (SippImage) {
 func scaleDown(src SippImage, dst *image.Gray) {		
 	srcRect := src.Bounds()
 	dstRect := dst.Bounds()
-	//fmt.Println("srcRect:<", srcRect, ">")
-	//fmt.Println("dstRect:<", dstRect, ">")
 	
 	srcWidth := srcRect.Dx()
 	srcHeight := srcRect.Dy()
 	dstWidth := dstRect.Dx()
 	dstHeight := dstRect.Dy()
-	//fmt.Println("srcWidth:<", srcWidth, ">")
-	//fmt.Println("srcHeight:<", srcHeight, ">")
-	//fmt.Println("dstWidth:<", dstWidth, ">")
-	//fmt.Println("dstHeight:<", dstHeight, ">")
 		
 	srcAR := float64(srcWidth) / float64(srcHeight)
 	dstAR := float64(dstWidth) / float64(dstHeight)
-	//fmt.Println("srcAR:<", srcAR, ">")
-	//fmt.Println("dstAR:<", dstAR, ">")
 		
 	var scale float64
 	var outWidth int
@@ -187,17 +174,12 @@ func scaleDown(src SippImage, dst *image.Gray) {
 		scale = float64(srcHeight) / float64(dstHeight)
 		outWidth = int(float64(srcWidth)/scale)
 		outHeight = dstHeight
-		//fmt.Println("Scaling vertically")
 	} else {
 		// scale horizontally and use a vertical offset
 		scale = float64(srcWidth) / float64(dstWidth)
 		outHeight = int(float64(srcHeight)/scale)
 		outWidth = dstWidth
-		//fmt.Println("Scaling horizontally")
 	}
-	//fmt.Println("scale:<", scale, ">")
-	//fmt.Println("outWidth:<", outWidth, ">")
-	//fmt.Println("outHeight:<", outHeight, ">")
 	
 	// One of the following will be 0.
 	hoff := (dstWidth - outWidth) / 2
@@ -210,8 +192,6 @@ func scaleDown(src SippImage, dst *image.Gray) {
 	if src.Bpp() == 16 {
 		scaleBpp = 1.0 / 256.0
 	}
-	
-	//fmt.Println("scaleBpp:", scaleBpp)
 	
 	hfilter := preComputeFilter(scale, outWidth, srcWidth, scaleBpp)
 	

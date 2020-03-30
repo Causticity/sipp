@@ -22,7 +22,7 @@ func TestRead (t *testing.T) {
 	if err == nil {
 		t.Error("Error: Read of garbage succeeded!")
 	} else {
-		t.Log(err) // What did happen? TODO:Can we check that it's the right error?
+		t.Log(err) // What did happen? Can we check that it's the right error?
 	}
 	
 	// Read a file that exists but isn't a png
