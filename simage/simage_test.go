@@ -5,13 +5,12 @@
 package simage
 
 import (
-//	"image"
 	"image/color"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
-	)
+)
 
 var testDir = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", 
 							"Causticity", "sipp", "testdata")

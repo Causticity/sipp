@@ -6,7 +6,6 @@ package sgrad
 
 import (
 	"image"
-    //"fmt"
     "math"
 )
 
@@ -24,7 +23,7 @@ type GradImage struct {
 	// TODO: This is actually a property of a ComplexImage, so perhaps should
 	//   go there. It costs a bit, but the point here is cleanliness first.
 	//   Can it still be calculated here? Sure. Make it a public member of 
-	//   ComplexImage	
+	//   ComplexImage and comment that all ops that make one should compute it.
 	MaxMod float64
 }
 
@@ -39,10 +38,6 @@ func Fdgrad(src SippImage) (grad *GradImage) {
 	grad.Rect = image.Rect(0,0,srect.Dx()-1,srect.Dy()-1)
 	grad.Pix = make([]complex128, grad.Rect.Dx()*grad.Rect.Dy())
 	grad.MaxMod = 0
-	
-	//fmt.Println("source image rect:<", srect, ">")
-	//fmt.Println("gradient image rect:<", grad.Rect, ">")
-	//fmt.Println("Gradient image no. of pixels:<", len(grad.Pix), ">")
 	
 	// grad[x,y] = complex(src[x+1,y+1] - src[x,y], src[x+1,y]-src[x,y+1])
 	dsti := 0
