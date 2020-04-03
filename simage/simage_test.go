@@ -12,8 +12,9 @@ import (
 	"testing"
 )
 
-var testDir = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", 
-							"Causticity", "sipp", "testdata")
+import (
+    . "github.com/Causticity/sipp/sipptesting/sipptestcore"
+)
 
 func TestRead (t *testing.T) {
 	// Read a file that doesn't exist
@@ -25,7 +26,7 @@ func TestRead (t *testing.T) {
 	}
 	
 	// Read a file that exists but isn't a png
-	_, err = Read(filepath.Join(testDir,"README"))
+	_, err = Read(filepath.Join(TestDir,"README"))
 	if err == nil {
 		t.Error("Error: Read of non-image file succeeded!")
 	} else {
@@ -33,7 +34,7 @@ func TestRead (t *testing.T) {
 	}
 
 	// Read a file that isn't gray
-	_, err = Read(filepath.Join(testDir,"mandrill.png"))
+	_, err = Read(filepath.Join(TestDir,"mandrill.png"))
 	if err == nil {
 		t.Error("Error: Read of non-gray succeeded!")
 	} else {
@@ -42,7 +43,7 @@ func TestRead (t *testing.T) {
 }
 
 func TestGraySippImage (t *testing.T) {
-	barb, err := Read(filepath.Join(testDir,"barbara.png"))
+	barb, err := Read(filepath.Join(TestDir,"barbara.png"))
 	if err != nil {
 		t.Fatal("Fatal: Can't read 8-bit test image")
 	}
@@ -70,7 +71,7 @@ func TestGraySippImage (t *testing.T) {
 	}
 	
 	// Write
-	name := filepath.Join(testDir,"test.png")
+	name := filepath.Join(TestDir,"test.png")
 	err = barb.Write(&name)
 	if err != nil {
 		t.Fatal("Error writing gray: "+ err.Error())
@@ -88,7 +89,7 @@ func TestGraySippImage (t *testing.T) {
 		
 	// Thumbnail
 	thm := barb.Thumbnail()
-	name = filepath.Join(testDir, "barb_thumb.png")
+	name = filepath.Join(TestDir, "barb_thumb.png")
 	gold, err := Read(name)
 	if err != nil {
 		t.Fatal("Error reading golden gray thumb")
@@ -99,7 +100,7 @@ func TestGraySippImage (t *testing.T) {
 }
 
 func TestGray16SippImage (t *testing.T) {
-	cc, err := Read(filepath.Join(testDir,"cosxcosy.png"))
+	cc, err := Read(filepath.Join(TestDir,"cosxcosy.png"))
 	if err != nil {
 		t.Fatal("Fatal: Can't read 16-bit test image")
 	}
@@ -127,7 +128,7 @@ func TestGray16SippImage (t *testing.T) {
 	}
 	
 	// Write
-	name := filepath.Join(testDir,"test16.png")
+	name := filepath.Join(TestDir,"test16.png")
 	err = cc.Write(&name)
 	if err != nil {
 		t.Fatal("Error writing gray16: "+ err.Error())
@@ -145,7 +146,7 @@ func TestGray16SippImage (t *testing.T) {
 		
 	// Thumbnail
 	thm := cc.Thumbnail()
-	name = filepath.Join(testDir, "cosxcosy_thumb.png")
+	name = filepath.Join(TestDir, "cosxcosy_thumb.png")
 	gold, err := Read(name)
 	if err != nil {
 		t.Fatal("Error reading golden gray16 thumb")

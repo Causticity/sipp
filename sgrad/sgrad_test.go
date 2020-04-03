@@ -10,6 +10,7 @@ import (
 )
 
 import (
+    . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 	. "github.com/Causticity/sipp/sipptesting"
 )
 
@@ -27,4 +28,6 @@ func TestFdgrad(t *testing.T) {
     if grad.MaxMod != SmallPicGradMaxMod {
         t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", SmallPicGradMaxMod, grad.MaxMod)
     }
+
+    
 }

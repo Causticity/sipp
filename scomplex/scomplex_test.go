@@ -10,6 +10,7 @@ import (
 	)
 
 import (
+    . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 	. "github.com/Causticity/sipp/sipptesting"
 )
 
