@@ -29,5 +29,17 @@ func TestFdgrad(t *testing.T) {
         t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", SmallPicGradMaxMod, grad.MaxMod)
     }
 
-    
+    testGrad := Fdgrad(SgrayCosxCosyTiny)
+    if testGrad.Rect.Dx() != SgrayCosxCosyTiny.Rect.Dx()-1  || testGrad.Rect.Dy() != SgrayCosxCosyTiny.Rect.Dy()-1 {
+        t.Errorf("Error: Gradient image rect wrong size: expected [%d,%d], got [%d,%d]",
+            SgrayCosxCosyTiny.Rect.Dx()-1, SgrayCosxCosyTiny.Rect.Dy()-1, testGrad.Rect.Dx(), testGrad.Rect.Dy())
+    }
+    if !reflect.DeepEqual(testGrad.Pix, CosxCosyTinyGrad) {
+        t.Error("Error: Gradient image incorrect. Expected:" +
+            ComplexArrayToString(CosxCosyTinyGrad, 19) + "Got:" +
+            ComplexArrayToString(testGrad.Pix, 19))
+    }
+    if testGrad.MaxMod != CosxCosyTinyGradMaxMod {
+        t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", CosxCosyTinyGradMaxMod, testGrad.MaxMod)
+    }
 }
