@@ -5,6 +5,7 @@
 package sgrad
 
 import (
+    "image"
 	"reflect"
 	"testing"
 )
@@ -13,6 +14,22 @@ import (
     . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 	. "github.com/Causticity/sipp/sipptesting"
 )
+
+func TestFromComplex(t *testing.T) {
+    grad := FromComplexArray(CosxCosyTinyGrad, 19)
+    if !reflect.DeepEqual(grad.Pix, CosxCosyTinyGrad) {
+        t.Error("Error: Gradient image array differs from the one constructed from");
+    }
+    rect := image.Rect(0,0,19,19)
+    if !reflect.DeepEqual(grad.Rect, rect) {
+        t.Errorf("Error: Gradient image rect incorrect, expected %v, got %v\n",
+            rect, grad.Rect)
+    }
+    if grad.MaxMod != CosxCosyTinyGradMaxMod {
+        t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", 
+            CosxCosyTinyGradMaxMod, grad.MaxMod)
+    }
+}
 
 func TestFdgrad(t *testing.T) {
     grad := Fdgrad(Sgray)

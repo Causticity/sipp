@@ -27,6 +27,26 @@ type GradImage struct {
 	MaxMod float64
 }
 
+// Wrap an array of complex numbers in a GradImage.
+func FromComplexArray(cpx []complex128, width int) (grad *GradImage) {
+    grad = new(GradImage)
+    grad.Pix = cpx
+    grad.Rect = image.Rect(0, 0, width, len(cpx)/width)
+    grad.MaxMod = 0
+    for _, c := range cpx {
+        re := real(c)
+        im := imag(c)
+        modsq := re*re + im*im
+        // store the maximum squared value, then take the root afterwards
+        if modsq > grad.MaxMod {
+            grad.MaxMod = modsq
+        }
+    }
+	grad.MaxMod = math.Sqrt(grad.MaxMod)
+
+	return
+}
+
 // Use a 2x2 kernel to create a finite-differences gradient image, one pixel
 // narrower and shorter than the original. We'd rather reduce the size of the
 // output image than arbitrarily wrap around or extend the source image, as
