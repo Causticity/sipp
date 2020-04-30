@@ -1,1 +1,1 @@
-./simage ./scomplex ./sgrad
+./simage ./scomplex ./sgrad ./shist ./sfft

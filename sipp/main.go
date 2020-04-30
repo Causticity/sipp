@@ -41,10 +41,10 @@ func main() {
 	var hst = flag.Bool("h", false, "Boolean; if true, write a histogram image")
 	var hsp = flag.Bool("hs", false, "Boolean; if true, write a histogram"+
 									 " image with the center spike suppressed")
-	var hse = flag.Bool("he", false, "Boolean; if true, write a histogram"+
-									 "-entropy image")
-	var gre = flag.Bool("ge", false, "Boolean; if true, write a gradient"+
-									 "-entropy image")
+	var hde = flag.Bool("hde", false, "Boolean; if true, write a histogram"+
+									 "delentropy image")
+	var de = flag.Bool("de", false, "Boolean; if true, write a delentropy"+
+									 " image")
 	var e = flag.Bool("e", false, "Boolean; if true, write a conventional"+
 									 " entropy image")
 	var f = flag.Bool("f", false, "Boolean; if true, write the fft"+
@@ -52,13 +52,14 @@ func main() {
 	var fls = flag.Bool("fls", false, "Boolean; if true, write the fft"+
 									" log spectrum image")
 	var a = flag.Bool("a", false, "Boolean; if true, write all the images")
-	var k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
+	var k = flag.Uint("K", 0, "Number of bins to scale the max radius to. "+
 							  "The histogram will be 2K+1 bins on a side.\n"+
 							  "        This is used only for 16-bit images.\n"+
 							  "        If K is omitted, it is computed from "+
-							  "the maximum excursion of the gradient.\n"+
-							  "        8-bit images always use a 511x511 histogram, "+
-							  "as that covers the entire possible space.")
+							  "the maximum excursion of the gradient.\n")
+	var kf8 = flag.Bool("kf8", false, "Boolean; if true, force 8-bit images "+
+	                                  " to use a 511x511 histogram, "+
+							          "as that covers the entire possible space.")
 	var v = flag.Bool("v", false, "Boolean; if true, verbosely report "+
 		                         "everything done")
 	var csv = flag.Bool("csv", false, "Boolean: if true, write the name of the"+
@@ -71,8 +72,8 @@ func main() {
 		*grd = true
 		*hst = true
 		*hsp = true
-		*hse = true
-		*gre = true
+		*hde = true
+		*de = true
 		*e = true
 		*f = true
 		*fls = true
@@ -105,10 +106,10 @@ func main() {
 		}
 	}
 	
-	if src.Bpp() == 8 {
+	if src.Bpp() == 8 && *kf8 {
 		*k = 255
 		if *v {
-			fmt.Println("Image is 8-bit. K forced to 255.")
+			fmt.Println("K forced to 255 for 8-bit image.")
 		}
 	}
 	
@@ -133,7 +134,7 @@ func main() {
 		}
 	}
 
-	hist := shist.Hist(grad, *k)
+	hist := shist.Hist(grad, uint16(*k))
 	
 	if *hst {
 		rhist := hist.Render()
@@ -155,7 +156,7 @@ func main() {
 		}
 	}
 
-	gradEnt := hist.GradEntropy()
+	gradEnt := hist.Delentropy()
 	delentropy := gradEnt/2.0
 		
 	if *csv {
@@ -163,22 +164,22 @@ func main() {
 	} else {
 		fmt.Println("Delentropy:", delentropy)
 	}
-	if *hse {
-		histEntImg := hist.HistEntropyImage()
-		histEntName := *out + "_hist_ent.png"
+	if *hde {
+		histEntImg := hist.HistDelentropyImage()
+		histEntName := *out + "_hist_delent.png"
 		err = histEntImg.Write(&histEntName)
 		if err != nil {
-			fmt.Println("Error writing the histogram entropy image", err)
+			fmt.Println("Error writing the histogram delentropy image", err)
 			os.Exit (1)
 		}
 	}
 	
-	if *gre {
-		gradEntImg := hist.GradEntropyImage()
-		gradEntName := *out + "_grad_ent.png"
-		err = gradEntImg.Write(&gradEntName)
+	if *de {
+		delEntImg := hist.DelEntropyImage()
+		delEntName := *out + "_delent.png"
+		err = delEntImg.Write(&delEntName)
 		if err != nil {
-			fmt.Println("Error writing the gradient entropy image", err)
+			fmt.Println("Error writing the delentropy image", err)
 			os.Exit (1)
 		}
 	}

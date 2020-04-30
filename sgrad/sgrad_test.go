@@ -15,6 +15,9 @@ import (
 	. "github.com/Causticity/sipp/sipptesting"
 )
 
+
+// TODO 16-bit tests. Make this table-driven.
+
 func TestFromComplex(t *testing.T) {
     grad := FromComplexArray(CosxCosyTinyGrad, 19)
     if !reflect.DeepEqual(grad.Pix, CosxCosyTinyGrad) {
@@ -26,7 +29,7 @@ func TestFromComplex(t *testing.T) {
             rect, grad.Rect)
     }
     if grad.MaxMod != CosxCosyTinyGradMaxMod {
-        t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", 
+        t.Errorf("Error: Incorrect max modulus. Expected: %v, got %v", 
             CosxCosyTinyGradMaxMod, grad.MaxMod)
     }
 }

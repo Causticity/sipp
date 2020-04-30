@@ -27,7 +27,7 @@ type SippHist struct {
 	// A reference to the gradient image we are computing from
 	grad *GradImage
 	// The size of our histogram. It will be 2*k+1 on a side.
-	k int
+	k uint16
 	// The histogram data.
 	bin [] uint32
 	// The index of the histogram bin for each gradient image pixel.
@@ -40,10 +40,10 @@ type SippHist struct {
 	// The maximum suppressed value, stored as a float for subsequent 
 	// computation.
 	maxSuppressed float64
-	// The entropy for each bin value that actually occurred.
-	entropy [] float64
-	// The largest entropy value.
-	maxEntropy float64
+	// The delentropy for each bin value that actually occurred.
+	delentropy [] float64
+	// The largest delentropy value.
+	maxDelentropy float64
 }
 
 const maxK = 2048
@@ -83,7 +83,7 @@ func Entropy(im SippImage) (float64, SippImage) {
 	hist := GreyHist(im)
 	total := float64(im.Bounds().Dx()*im.Bounds().Dy())
 	normHist := make([]float64, len(hist))
-		var check float64
+	var check float64
 	for i, binVal := range hist {
 		normHist[i] = float64(binVal)/total
 		check = check + normHist[i]
@@ -128,25 +128,31 @@ func Entropy(im SippImage) (float64, SippImage) {
 
 // Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
 // the given gradient image.
-func Hist(grad *GradImage, k int) (hist *SippHist) {
+// TODO: For 16-bit images, this should use sparse techniques, because the max
+// mod may be huge, but there will only ever be as many values as pixels. In
+// general, we should avoid scaling down. We should always be able to deal with
+// the exact histogram, without any scaling into the bins. So perhaps get rid of
+// "k"? But the number of bins does affect the entropy, 
+func Hist(grad *GradImage, k uint16) (hist *SippHist) {
 	if k == 0 {
 		if grad.MaxMod > maxK {
 			k = maxK
+			fmt.Println("clamping k; max mod is ", grad.MaxMod)
 		} else {
-			k = int(grad.MaxMod)+kMargin
+			k = uint16(grad.MaxMod)+kMargin
 		}
 	}
-	//fmt.Println("K:", k, " histogram edge size:", (k*2+1))
+	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
 	// create the 2D histogram bins as 2K+1 on a side, so always odd
 	hist = new(SippHist)
 	hist.grad = grad
 	hist.k = k
 	hist.binIndex = make([] int, len(grad.Pix))
-	stride := 2*k+1
+	stride := int(2*k+1)
 	histDataSize := stride*stride
 	hist.bin = make([] uint32, histDataSize)
 	//fmt.Println("histogram side:", stride, " data size: ", histDataSize)
-	
+
 	// Walk through the image, computing the bin address from the gradient 
 	// values storing the bin address in binIndex and incrementing the bin.
 	// Save the maximum bin value as well.
@@ -156,8 +162,8 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 	}
 	//fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for i, pixel := range grad.Pix {
-		u := int(math.Floor(factor*real(pixel))) + k
-		v := int(math.Floor(factor*imag(pixel))) + k
+		u := int(math.Floor(factor*real(pixel))) + int(k)
+		v := int(math.Floor(factor*imag(pixel))) + int(k)
 		hist.binIndex[i] = v*stride + u
 		hist.bin[hist.binIndex[i]]++
 		if hist.bin[hist.binIndex[i]] > hist.max {
@@ -168,77 +174,76 @@ func Hist(grad *GradImage, k int) (hist *SippHist) {
 	return
 }
 
-// GradEntropy returns the 2D entropy of the gradient image.
-// This should really be called DelEntropy.
-func (hist *SippHist) GradEntropy() (float64) {
+// Delentropy returns the 2D entropy of the gradient image.
+func (hist *SippHist) Delentropy() (float64) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
-	hist.entropy = make([] float64, hist.max+1)
+	hist.delentropy = make([] float64, hist.max+1)
     total := float64(len(hist.grad.Pix))
-    hist.maxEntropy = 0.0
-    var ent float64 = 0.0
+    hist.maxDelentropy = 0.0
+    var dent float64 = 0.0
 	for _, bin := range hist.bin {
 		if bin != 0 {
 			// compute the entropy only once for a given bin value.
-			if hist.entropy[bin] == 0.0 {
+			if hist.delentropy[bin] == 0.0 {
 				p := float64(bin) / total
-				hist.entropy[bin] = p * math.Log2(p) * -1.0
+				hist.delentropy[bin] = p * math.Log2(p) * -1.0
 			}
-			ent += hist.entropy[bin]
-			if hist.entropy[bin] > hist.maxEntropy {
-				hist.maxEntropy = hist.entropy[bin]
+			dent += hist.delentropy[bin]
+			if hist.delentropy[bin] > hist.maxDelentropy {
+				hist.maxDelentropy = hist.delentropy[bin]
 			}
 		}
 	}
 	
-	return ent
+	return dent
 }
 
-// HistEntropyImage returns a greyscale image of the entropy for each histogram
-// bin. GradEntropy must have been called first.
-func (hist *SippHist) HistEntropyImage() (SippImage) {
-	// Ensure that we have the table of entropies and the maximum
-	if hist.entropy == nil {
-		fmt.Println("Warning: GradEntropyImage called before computing entropy!")
+// HistDelentropyImage returns a greyscale image of the delentropy for each
+// histogram bin. DelEntropy must have been called first.
+func (hist *SippHist) HistDelentropyImage() (SippImage) {
+	// Ensure that we have the table of delentropies and the maximum
+	if hist.delentropy == nil {
+		fmt.Println("Warning: HistDelntropyImage called before computing delentropy!")
 		return nil
 	}
 	// Make a greyscale image of the entropy for each bin.
-	stride := 2*hist.k+1
-	entGray := new(SippGray)
-	entGray.Gray = image.NewGray(image.Rect(0,0,stride,stride))
-	entGrayPix := entGray.Pix()
-	// scale the entropy from (0-hist.maxEntropy) to (0-255)
-	scale := 255.0 / hist.maxEntropy
+	stride := int(2*hist.k+1)
+	dentGray := new(SippGray)
+	dentGray.Gray = image.NewGray(image.Rect(0,0,stride,stride))
+	dentGrayPix := dentGray.Pix()
+	// scale the delentropy from (0-hist.maxDelentropy) to (0-255)
+	scale := 255.0 / hist.maxDelentropy
 	for i, val := range hist.bin {
-		entGrayPix[i] = uint8(hist.entropy[val]*scale)
+		dentGrayPix[i] = uint8(hist.delentropy[val]*scale)
 	}
-	return entGray
+	return dentGray
 }
 
-// GradEntropyImage returns a greyscale image of the entropy for each gradient
-// pixel. GradEntropy must have been called first.
-func (hist *SippHist) GradEntropyImage() (SippImage) {
+// DelEntropyImage returns a greyscale image of the entropy for each gradient
+// pixel. DelEntropy must have been called first.
+func (hist *SippHist) DelEntropyImage() (SippImage) {
 	// Ensure that we have the table of entropies and the maximum
-	if hist.entropy == nil {
-		fmt.Println("Warning: GradEntropyImage called before computing entropy!")
+	if hist.delentropy == nil {
+		fmt.Println("Warning: DelEntropyImage called before computing delentropy!")
 		return nil
 	}
 	// Make a greyscale image of the entropy for each bin.
-	entGray := new(SippGray)
-	entGray.Gray = image.NewGray(hist.grad.Rect)
-	entGrayPix := entGray.Pix()
+	dentGray := new(SippGray)
+	dentGray.Gray = image.NewGray(hist.grad.Rect)
+	dentGrayPix := dentGray.Pix()
 	// scale the entropy from (0-hist.maxEntropy) to (0-255)
-	scale := 255.0 / hist.maxEntropy
-	for i := range entGrayPix {
+	scale := 255.0 / hist.maxDelentropy
+	for i := range dentGrayPix {
 		// The following lookup works as follows:
-		// i - the gradient (and entropy) image-pixel index
+		// i - the gradient (and delentropy) image-pixel index
 		// hist.binIndex[i] - the histogram bin for that pixel
 		// hist.bin[hist.binIndex[i] - the value in that bin
-		// hist.entropy[...] The entropy for that value
-		// We scale that entropy and convert to an 8-bit pixel
-		entGrayPix[i] = uint8(hist.entropy[hist.bin[hist.binIndex[i]]]*scale)
+		// hist.delentropy[...] The delentropy for that value
+		// We scale that delentropy and convert to an 8-bit pixel
+		dentGrayPix[i] = uint8(hist.delentropy[hist.bin[hist.binIndex[i]]]*scale)
 	}
-	return entGray
+	return dentGray
 }
 
 func supScale(x, y, k int) float64 {
@@ -256,14 +261,14 @@ func (hist *SippHist) Suppress() {
 	if hist.suppressed != nil {
 		return
 	}
-	stride := 2*hist.k+1
+	stride := int(2*hist.k+1)
 	size := stride*stride
 	hist.suppressed = make([]float64, size)
 	var index uint32 = 0
 	hist.maxSuppressed = 0
 	for y := 0; y < stride; y++ {
 		for x := 0; x < stride; x++ {
-			sscale := supScale(x, y, hist.k)
+			sscale := supScale(x, y, int(hist.k))
 			hist.suppressed[index] = float64(hist.bin[index]) * sscale
 			if hist.suppressed[index] > hist.maxSuppressed {
 				hist.maxSuppressed = hist.suppressed[index]
@@ -280,7 +285,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
-	stride := 2*hist.k+1
+	stride := int(2*hist.k+1)
 	var scale float64 = 255.0 / hist.maxSuppressed
 	//fmt.Println("Suppressed Render scale factor:", scale)
 	rnd := new(SippGray)
@@ -297,7 +302,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 func (hist *SippHist) Render() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
-	stride := 2*hist.k+1
+	stride := int(2*hist.k+1)
 	//var scale float64 = 255.0 / float64(hist.max)
 	//fmt.Println("Render scale factor:", scale)
 	rnd := new(SippGray)

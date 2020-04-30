@@ -16,6 +16,7 @@ var Sgray *SippGray
 var Sgray16 *SippGray16
 var SgrayZero *SippGray
 var SgrayCosxCosyTiny *SippGray
+var SgrayCosxCosyTinyDelentropy *SippGray
 
 func init() {
     Sgray = new(SippGray)
@@ -26,4 +27,6 @@ func init() {
     SgrayZero.Gray = &sipptestcore.GrayZero
     SgrayCosxCosyTiny = new(SippGray)
     SgrayCosxCosyTiny.Gray = &sipptestcore.CosxCosyTiny
+    SgrayCosxCosyTinyDelentropy = new(SippGray)
+    SgrayCosxCosyTinyDelentropy.Gray = &sipptestcore.CosxCosyTinyDelentropyImage
 }
