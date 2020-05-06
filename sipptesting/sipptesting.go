@@ -14,19 +14,13 @@ import (
 
 var Sgray *SippGray
 var Sgray16 *SippGray16
-var SgrayZero *SippGray
 var SgrayCosxCosyTiny *SippGray
-var SgrayCosxCosyTinyDelentropy *SippGray
 
 func init() {
     Sgray = new(SippGray)
     Sgray.Gray = &sipptestcore.Gray
     Sgray16 = new(SippGray16)
     Sgray16.Gray16 = &sipptestcore.Gray16
-    SgrayZero = new(SippGray)
-    SgrayZero.Gray = &sipptestcore.GrayZero
     SgrayCosxCosyTiny = new(SippGray)
     SgrayCosxCosyTiny.Gray = &sipptestcore.CosxCosyTiny
-    SgrayCosxCosyTinyDelentropy = new(SippGray)
-    SgrayCosxCosyTinyDelentropy.Gray = &sipptestcore.CosxCosyTinyDelentropyImage
 }

@@ -6,6 +6,7 @@ package sgrad
 
 import (
     "image"
+    "math"
 	"reflect"
 	"testing"
 )
@@ -14,6 +15,14 @@ import (
     . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 	. "github.com/Causticity/sipp/sipptesting"
 )
+
+var smallPicGrad = []complex128 {
+    5 - 3i, 5 - 3i, 5 - 3i,
+    5 - 3i, 5 - 3i, 5 - 3i,
+    5 - 3i, 5 - 3i, 5 - 3i,
+}
+
+var smallPicGradMaxMod = math.Sqrt(34.0)
 
 
 // TODO 16-bit tests. Make this table-driven.
@@ -40,13 +49,13 @@ func TestFdgrad(t *testing.T) {
         t.Errorf("Error: Gradient image rect wrong size: expected [%d,%d], got [%d,%d]",
             Sgray.Rect.Dx()-1, Sgray.Rect.Dy()-1, grad.Rect.Dx(), grad.Rect.Dy())
     }
-    if !reflect.DeepEqual(grad.Pix, SmallPicGrad) {
+    if !reflect.DeepEqual(grad.Pix, smallPicGrad) {
         t.Error("Error: Gradient image incorrect. Expected:" +
-            ComplexArrayToString(SmallPicGrad, 3) + "Got:" +
+            ComplexArrayToString(smallPicGrad, 3) + "Got:" +
             ComplexArrayToString(grad.Pix, 3))
     }
-    if grad.MaxMod != SmallPicGradMaxMod {
-        t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", SmallPicGradMaxMod, grad.MaxMod)
+    if grad.MaxMod != smallPicGradMaxMod {
+        t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", smallPicGradMaxMod, grad.MaxMod)
     }
 
     testGrad := Fdgrad(SgrayCosxCosyTiny)
