@@ -31,7 +31,7 @@ sipp -in=<path to input image> -out=<prefix for output images> -a=true
 For example, I have an out directory parallel to the standard src, pkg, and bin,
 so I run from the root as follows:
 
-sipp -in=src/github.com/Causticity/sipp/testdata/Lacryma_1024.png -out=out/Lac -a=true
+sipp -in=src/github.com/Causticity/sipp/sampledata/Lacryma_1024.png -out=out/Lac -a=true
 
 This prepends the various output files with "Lac" and places them in the out
 directory.
