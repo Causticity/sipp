@@ -5,6 +5,7 @@
 package sgrad
 
 import (
+    //"fmt"
     "image"
     "math"
 	"reflect"
@@ -24,8 +25,27 @@ var smallPicGrad = []complex128 {
 
 var smallPicGradMaxMod = math.Sqrt(34.0)
 
+var identityKernel = SippGradKernel {
+    {1 + 0i, 0 + 0i},
+    {0 + 0i, 0 + 0i},
+}
 
-// TODO 16-bit tests. Make this table-driven.
+var imagIdentityKernel = SippGradKernel {
+    {0 + 1i, 0 + 0i},
+    {0 + 0i, 0 + 0i},
+}
+var kieransKernel = SippGradKernel {
+    {-1 + 0i, 0 - 1i},
+    {0 + 1i, 1 + 0i},
+}
+
+var smallPicGradKieransKernel = []complex128 {
+    5 + 3i, 5 + 3i, 5 + 3i,
+    5 + 3i, 5 + 3i, 5 + 3i,
+    5 + 3i, 5 + 3i, 5 + 3i,
+}
+
+// TODO Make this table-driven.
 
 func TestFromComplex(t *testing.T) {
     grad := FromComplexArray(CosxCosyTinyGrad, 19)
@@ -70,5 +90,29 @@ func TestFdgrad(t *testing.T) {
     }
     if testGrad.MaxMod != CosxCosyTinyGradMaxMod {
         t.Errorf("Error: Incorrect max modulus. Expected: %f, got %f", CosxCosyTinyGradMaxMod, testGrad.MaxMod)
+    }
+    idGrad := FdgradKernel(SgrayCosxCosyTiny, identityKernel)
+	for y := 0; y < idGrad.Rect.Dy(); y++ {
+		for x := 0; x < idGrad.Rect.Dx(); x++ { 
+		    if real(idGrad.Pix[y*idGrad.Rect.Dy()+x]) != SgrayCosxCosyTiny.Val(x, y) {
+		        t.Errorf("Error: Identity gradient incorrect at %v, %v. Expected %v, got %v\n",
+		                 x, y, SgrayCosxCosyTiny.Val(x, y), real(idGrad.Pix[y*idGrad.Rect.Dy()+x]))
+		    }
+		}
+    }
+    imagIdGrad := FdgradKernel(SgrayCosxCosyTiny, imagIdentityKernel)
+	for y := 0; y < imagIdGrad.Rect.Dy(); y++ {
+		for x := 0; x < imagIdGrad.Rect.Dx(); x++ { 
+		    if imag(imagIdGrad.Pix[y*imagIdGrad.Rect.Dy()+x]) != SgrayCosxCosyTiny.Val(x, y) {
+		        t.Errorf("Error: ImagIdentity gradient incorrect at %v, %v. Expected %v, got %v\n",
+		                 x, y, SgrayCosxCosyTiny.Val(x, y), imag(imagIdGrad.Pix[y*idGrad.Rect.Dy()+x]))
+		    }
+		}
+    }
+    kierGrad := FdgradKernel(Sgray, kieransKernel)
+    if !reflect.DeepEqual(kierGrad.Pix, smallPicGradKieransKernel) {
+        t.Error("Error: Gradient image incorrect. Expected:" +
+            ComplexArrayToString(smallPicGradKieransKernel, 3) + "Got:" +
+            ComplexArrayToString(kierGrad.Pix, 3))
     }
 }
