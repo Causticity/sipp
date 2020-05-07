@@ -16,6 +16,13 @@ import (
     . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
 
+// TODO. The coverage tool shows that we aren't testing 3 code paths:
+// - an error return from file Create
+// - when the src aspect ratio is smaller than the target thumbnail aspect ratio
+// - when the first weight when precomputing the scaling filter is less than the
+//   minimum fraction.
+// These should be corrected at some point, but the first is trivial and the
+// other two only apply to thumbnail generation, so this is low priority.
 func TestRead (t *testing.T) {
 	// Read a file that doesn't exist
 	_, err := Read("blahblah")

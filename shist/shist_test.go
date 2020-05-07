@@ -19,6 +19,10 @@ import (
 	. "github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
 
+// TODO: The coverage tool shows a few minor code paths not tested here. Most
+// are related to 16-bit, which will be reworked anyway. The others seem pretty
+// trivial, though they probably should be tested at some point.
+
 var smallPicEntropy = 4.0
 
 var smallPicEntropyImage = []uint8{
