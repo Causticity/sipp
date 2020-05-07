@@ -20,8 +20,8 @@ import (
 )
 
 // TODO: The coverage tool shows a few minor code paths not tested here. Most
-// are related to 16-bit, which will be reworked anyway. The others seem pretty
-// trivial, though they probably should be tested at some point.
+// are related to 16-bit, which will be reworked anyway. Once 16-bit is fully
+// sorted out, the coverage should be improved to 100%.
 
 var smallPicEntropy = 4.0
 
@@ -349,6 +349,10 @@ func TestHist(t *testing.T) {
 		if histDentImage != nil {
 			t.Error("HistDelentropyImage returned non-nil before Delentropy called")
 		}
+		delentImage := hist.DelEntropyImage()
+		if delentImage != nil {
+			t.Error("DelentropyImage returned non-nil before Delentropy called")
+		}
 		dent := hist.Delentropy()
 		if dent != test.delentropy {
 			t.Errorf("Error: delentropy for %s incorrect. Expected %v, got %v",
@@ -371,7 +375,7 @@ func TestHist(t *testing.T) {
 			t.Errorf("Error: histogram delentropy image incorrect. Expected %v, got%v\n",
 				check.Pix(), histDentImage.Pix())
 		}
-		delentImage := hist.DelEntropyImage()
+		delentImage = hist.DelEntropyImage()
 		if !reflect.DeepEqual(delentImage.Pix(), test.delentropyImage.Pix()) {
 			t.Errorf("Error: gradient delentropy image incorrect. Expected %v, got %v\n",
 				test.delentropyImage.Pix(), delentImage.Pix())
