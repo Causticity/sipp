@@ -7,6 +7,9 @@ package sfft
 import (
 	"reflect"
 	"testing"
+
+    "github.com/davidkleiven/gosfft/sfft"
+
 )
 
 import (
@@ -233,9 +236,15 @@ var cosxcosyTinySpect = []uint8 {
 
 func TestSfft(t *testing.T) {
 	fft := FFT(SgrayCosxCosyTiny)
-	if !reflect.DeepEqual(fft.Pix, cosxcosyTinyFft) {
-	    t.Errorf("Error: wrong fft. Expected:\n%v\nGot:\n%v\n", 
-	             cosxcosyTinyFft, fft.Pix)
+	// Expected results were generated with go-fftw, which give very slightly
+	// different results, so now we do an approximate comparison, which is
+	// simpler and more robust than replacing the expected values.
+	tol := 1e-10
+	for i, v := range fft.Pix {
+	    if !sfft.CmplxEqualApprox(v, cosxcosyTinyFft[i], tol) {
+	        t.Errorf("Error: wrong fft. Expected:\n%v\nGot:\n%v\n", 
+	                 cosxcosyTinyFft, fft.Pix)
+	    }
 	}
 	spect := LogSpectrum(fft).Pix()
 	if !reflect.DeepEqual(spect, cosxcosyTinySpect) {
