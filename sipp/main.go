@@ -52,12 +52,12 @@ func main() {
 	var fls = flag.Bool("fls", false, "Boolean; if true, write the fft"+
 									" log spectrum image")
 	var a = flag.Bool("a", false, "Boolean; if true, write all the images")
-	var k = flag.Uint("K", 0, "Number of bins to scale the max radius to. "+
-							  "The histogram will be 2K+1 bins on a side.\n"+
+	var radius = flag.Uint("r", 0, "Number of bins to scale the max radius to. "+
+							  "The histogram will be 2r+1 bins on a side.\n"+
 							  "        This is used only for 16-bit images.\n"+
-							  "        If K is omitted, it is computed from "+
+							  "        If r is omitted, it is computed from "+
 							  "the maximum excursion of the gradient.\n")
-	var kf8 = flag.Bool("kf8", false, "Boolean; if true, force 8-bit images "+
+	var rf8 = flag.Bool("rf8", false, "Boolean; if true, force 8-bit images "+
 	                                  " to use a 511x511 histogram, "+
 							          "as that covers the entire possible space.")
 	var v = flag.Bool("v", false, "Boolean; if true, verbosely report "+
@@ -106,10 +106,10 @@ func main() {
 		}
 	}
 	
-	if src.Bpp() == 8 && *kf8 {
-		*k = 255
+	if src.Bpp() == 8 && *rf8 {
+		*radius = 255
 		if *v {
-			fmt.Println("K forced to 255 for 8-bit image.")
+			fmt.Println("Rdius forced to 255 for 8-bit image.")
 		}
 	}
 	
@@ -134,7 +134,7 @@ func main() {
 		}
 	}
 
-	hist := shist.Hist(grad, uint16(*k))
+	hist := shist.Hist(grad, uint16(*radius))
 	
 	if *hst {
 		rhist := hist.Render()

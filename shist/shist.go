@@ -26,8 +26,8 @@ import (
 type SippHist struct {
 	// A reference to the gradient image we are computing from
 	grad *GradImage
-	// The size of our histogram. It will be 2*k+1 on a side.
-	k uint16
+	// The size of our histogram. It will be 2*radius+1 on a side.
+	radius uint16
 	// The histogram data.
 	bin [] uint32
 	// The index of the histogram bin for each gradient image pixel.
@@ -46,8 +46,8 @@ type SippHist struct {
 	maxDelentropy float64
 }
 
-const maxK = 2048
-const kMargin = 8
+const maxRadius = 2048
+const radiusMargin = 8
 
 const histSize8BPP = 256
 const histSize16BPP = 65536
@@ -126,29 +126,30 @@ func Entropy(im SippImage) (float64, SippImage) {
 	return ent, entIm
 }
 
-// Hist computes the 2D histogram, 2*K=1 on a side with 0,0 at the center, from
-// the given gradient image.
+// Hist computes the 2D histogram, 2*radius=1 on a side with 0,0 at the center,
+// from the given gradient image.
 // TODO: For 16-bit images, this should use sparse techniques, because the max
 // mod may be huge, but there will only ever be as many values as pixels. In
 // general, we should avoid scaling down. We should always be able to deal with
 // the exact histogram, without any scaling into the bins. So perhaps get rid of
-// "k"? But the number of bins does affect the entropy, 
-func Hist(grad *GradImage, k uint16) (hist *SippHist) {
-	if k == 0 {
-		if grad.MaxMod > maxK {
-			k = maxK
-			fmt.Println("clamping k; max mod is ", grad.MaxMod)
+// "radius"? But the number of bins does affect the entropy, as it's the
+// denominator of the probability.
+func Hist(grad *GradImage, radius uint16) (hist *SippHist) {
+	if radius == 0 {
+		if grad.MaxMod > maxRadius {
+			radius = maxRadius
+			fmt.Println("clamping radius; max mod is ", grad.MaxMod)
 		} else {
-			k = uint16(grad.MaxMod)+kMargin
+			radius = uint16(grad.MaxMod)+radiusMargin
 		}
 	}
-	fmt.Println("K:", k, " histogram edge size:", (k*2+1))
-	// create the 2D histogram bins as 2K+1 on a side, so always odd
+	fmt.Println("Radius:", radius, " histogram edge size:", (radius*2+1))
+	// create the 2D histogram bins as 2radius+1 on a side, so always odd
 	hist = new(SippHist)
 	hist.grad = grad
-	hist.k = k
+	hist.radius = radius
 	hist.binIndex = make([] int, len(grad.Pix))
-	stride := int(2*k+1)
+	stride := int(2*radius+1)
 	histDataSize := stride*stride
 	hist.bin = make([] uint32, histDataSize)
 	//fmt.Println("histogram side:", stride, " data size: ", histDataSize)
@@ -157,13 +158,13 @@ func Hist(grad *GradImage, k uint16) (hist *SippHist) {
 	// values storing the bin address in binIndex and incrementing the bin.
 	// Save the maximum bin value as well.
 	var factor float64 = 1.0
-	if grad.MaxMod > float64(k) {
-	    factor = float64(k) / grad.MaxMod
+	if grad.MaxMod > float64(radius) {
+	    factor = float64(radius) / grad.MaxMod
 	}
 	//fmt.Println("MaxMod:", grad.MaxMod, " factor:", factor)
 	for i, pixel := range grad.Pix {
-		u := int(math.Floor(factor*real(pixel))) + int(k)
-		v := int(math.Floor(factor*imag(pixel))) + int(k)
+		u := int(math.Floor(factor*real(pixel))) + int(radius)
+		v := int(math.Floor(factor*imag(pixel))) + int(radius)
 		hist.binIndex[i] = v*stride + u
 		hist.bin[hist.binIndex[i]]++
 		if hist.bin[hist.binIndex[i]] > hist.max {
@@ -208,7 +209,7 @@ func (hist *SippHist) HistDelentropyImage() (SippImage) {
 		return nil
 	}
 	// Make a greyscale image of the entropy for each bin.
-	stride := int(2*hist.k+1)
+	stride := int(2*hist.radius+1)
 	dentGray := new(SippGray)
 	dentGray.Gray = image.NewGray(image.Rect(0,0,stride,stride))
 	dentGrayPix := dentGray.Pix()
@@ -246,29 +247,29 @@ func (hist *SippHist) DelEntropyImage() (SippImage) {
 	return dentGray
 }
 
-func supScale(x, y, k int) float64 {
-	xdist := float64(x - k)
-	ydist := float64(y - k)
+func supScale(x, y, radius int) float64 {
+	xdist := float64(x - radius)
+	ydist := float64(y - radius)
 	hyp := math.Hypot(xdist, ydist)
-	return (hyp/float64(k))
+	return (hyp/float64(radius))
 }
 
 // Suppress suppresses the spike near the origin of the histogram by scaling the
 // values in the histogram by their distance from the origin. All the values in
 // in the histogram are multiplied by a factor that ranges from 0.0 at the
-// origin to 1.0 at k in any direction from the origin.
+// origin to 1.0 at radius in any direction from the origin.
 func (hist *SippHist) Suppress() {
 	if hist.suppressed != nil {
 		return
 	}
-	stride := int(2*hist.k+1)
+	stride := int(2*hist.radius+1)
 	size := stride*stride
 	hist.suppressed = make([]float64, size)
 	var index uint32 = 0
 	hist.maxSuppressed = 0
 	for y := 0; y < stride; y++ {
 		for x := 0; x < stride; x++ {
-			sscale := supScale(x, y, int(hist.k))
+			sscale := supScale(x, y, int(hist.radius))
 			hist.suppressed[index] = float64(hist.bin[index]) * sscale
 			if hist.suppressed[index] > hist.maxSuppressed {
 				hist.maxSuppressed = hist.suppressed[index]
@@ -285,7 +286,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
-	stride := int(2*hist.k+1)
+	stride := int(2*hist.radius+1)
 	var scale float64 = 255.0 / hist.maxSuppressed
 	//fmt.Println("Suppressed Render scale factor:", scale)
 	rnd := new(SippGray)
@@ -302,7 +303,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 func (hist *SippHist) Render() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
-	stride := int(2*hist.k+1)
+	stride := int(2*hist.radius+1)
 	//var scale float64 = 255.0 / float64(hist.max)
 	//fmt.Println("Render scale factor:", scale)
 	rnd := new(SippGray)

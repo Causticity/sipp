@@ -93,7 +93,7 @@ var cosxCosyTinyBinIndex = []int{
 	8296, 9984, 11416, 12331, 13117, 13383, 13130, 12358, 11325, 9900, 8343,
 }
 
-var cosxCosyTinyBinIndexk255 = []int{
+var cosxCosyTinyBinIndexRadius255 = []int{
 	130537, 124396, 119281, 114679, 111615, 110600, 111119, 114196, 118296, 123930,
 	130584, 136724, 142350, 146951, 149504, 150520, 150001, 146924, 142313, 136660,
 	130523, 124389, 118770, 114177, 111630, 110618, 111653, 114220, 118830, 124460,
@@ -249,7 +249,7 @@ func TestConventionalEntropy(t *testing.T) {
 type histTest struct {
 	name                    string
 	grad                    []complex128
-	k                       uint16
+	radius                  uint16
 	stride                  int
 	maxMod                  float64
 	count                   int
@@ -268,7 +268,7 @@ type histTest struct {
 func TestHist(t *testing.T) {
 	var tests = []histTest{
 		{
-			"CosxCosyTinyGrad K = 0",
+			"CosxCosyTinyGrad RADIUS = 0",
 			CosxCosyTinyGrad,
 			0,
 			cosxCosyTinyStride,
@@ -286,39 +286,39 @@ func TestHist(t *testing.T) {
 			"cosxcosy_tiny_hist.png",
 		},
 		{
-			"CosxCosyTinyGrad K = 255",
+			"CosxCosyTinyGrad RADIUS = 255",
 			CosxCosyTinyGrad,
 			255,
 			cosxCosyTinyStride,
 			CosxCosyTinyGradMaxMod,
 			expectedCosxCosyTinyNonZeroHistCount,
-			cosxCosyTinyBinIndexk255,
+			cosxCosyTinyBinIndexRadius255,
 			cosxCosyTinyBinVals,
 			expectedMax,
 			expectedDelentropy,
 			expectedMaxDelentropy,
 			expectedDelentropyArray,
-			"cosxcosy_tiny_k255_hist_delent.png",
+			"cosxcosy_tiny_radius255_hist_delent.png",
 			sgrayCosxCosyTinyDelentropy,
-			"cosxcosy_tiny_k255_hist_sup.png",
-			"cosxcosy_tiny_k255_hist.png",
+			"cosxcosy_tiny_radius255_hist_sup.png",
+			"cosxcosy_tiny_radius255_hist.png",
 		},
 		// TODO 16-bit tests, once 16-bit has been truly sorted out.
 	}
 	for _, test := range tests {
 		grad := FromComplexArray(test.grad, test.stride-1)
-		hist := Hist(grad, test.k)
+		hist := Hist(grad, test.radius)
 		if hist.grad != grad {
 			t.Errorf("Error: SippHist for %s has incorrect grad, expected %v, got %v",
 				test.name, grad, hist.grad)
 		}
-		xpctK := test.k
-		if test.k == 0 {
-			xpctK = uint16(test.maxMod) + kMargin
+		xpctRadius := test.radius
+		if test.radius == 0 {
+			xpctRadius = uint16(test.maxMod) + radiusMargin
 		}
-		if hist.k != xpctK {
-			t.Errorf("Error: K for %s histogram incorrect. Expected %v, got %v",
-				test.name, xpctK, hist.k)
+		if hist.radius != xpctRadius {
+			t.Errorf("Error: radius for %s histogram incorrect. Expected %v, got %v",
+				test.name, xpctRadius, hist.radius)
 		}
 		count := 0
 		for _, val := range hist.bin {
