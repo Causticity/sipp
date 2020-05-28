@@ -52,7 +52,8 @@ func FromComplexArray(cpx []complex128, width int) (grad *GradImage) {
 // goes back and forth unnecessarily. It could be done with integer arithmetic
 // by adding a function to simage that returns the pixel value as an int, but
 // that probably won't save much. This is all optimisation and should be done
-// only with proper profiling and a specific performance target.
+// only with proper profiling and a specific performance target. Although
+// integer-only arithmetic might also be useful to debug numerical issues.
 
 // SippGradKernels are defined in the same way as images are stored in memory,
 // i.e. in row-major order from the top-left corner down.

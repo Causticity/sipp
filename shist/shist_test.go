@@ -5,7 +5,6 @@
 package shist
 
 import (
-	"image"
 	_ "image/png"
 	"path/filepath"
 	"reflect"
@@ -22,44 +21,6 @@ import (
 // TODO: The coverage tool shows a few minor code paths not tested here. Most
 // are related to 16-bit, which will be reworked anyway. Once 16-bit is fully
 // sorted out, the coverage should be improved to 100%.
-
-var smallPicEntropy = 4.0
-
-var smallPicEntropyImage = []uint8{
-	255, 255, 255, 255,
-	255, 255, 255, 255,
-	255, 255, 255, 255,
-	255, 255, 255, 255,
-}
-
-var smallPic16Entropy = 4.0
-
-var cosxCosyTinyStride = 20
-
-var cosxCosyTinyEntropy = 5.211838049805185
-
-var cosxCosyTinyEntropyImage = []uint8{
-	154, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 154,
-	255, 154, 208, 154, 255, 255, 124, 208, 154, 255, 255, 154, 208, 182, 255, 255, 154, 208, 154, 255,
-	255, 208, 124, 255, 154, 154, 208, 154, 208, 255, 255, 208, 154, 208, 154, 154, 255, 52, 208, 255,
-	154, 154, 255, 124, 255, 255, 154, 208, 124, 255, 255, 124, 208, 154, 255, 255, 124, 255, 154, 154,
-	154, 255, 154, 255, 154, 154, 255, 154, 255, 255, 255, 255, 154, 255, 154, 154, 255, 154, 255, 154,
-	255, 255, 154, 255, 154, 154, 255, 154, 255, 154, 154, 255, 154, 255, 154, 154, 255, 154, 255, 255,
-	255, 182, 91, 154, 255, 255, 124, 255, 154, 154, 154, 154, 255, 52, 255, 255, 154, 208, 182, 255,
-	255, 91, 154, 91, 154, 154, 255, 124, 208, 255, 255, 91, 124, 255, 154, 154, 208, 154, 208, 255,
-	255, 154, 91, 182, 255, 255, 154, 208, 154, 255, 255, 154, 91, 154, 255, 255, 182, 208, 154, 255,
-	154, 255, 255, 255, 255, 154, 154, 255, 255, 154, 154, 255, 255, 154, 154, 255, 255, 255, 255, 154,
-	154, 255, 255, 255, 255, 154, 154, 255, 255, 154, 154, 255, 255, 154, 154, 255, 255, 255, 255, 154,
-	255, 154, 208, 182, 255, 255, 154, 208, 154, 255, 255, 154, 208, 154, 255, 255, 124, 208, 154, 255,
-	255, 208, 154, 208, 154, 154, 255, 52, 208, 255, 255, 208, 124, 255, 154, 154, 208, 154, 208, 255,
-	255, 124, 208, 154, 255, 255, 124, 255, 154, 154, 154, 154, 255, 124, 255, 255, 154, 208, 124, 255,
-	255, 255, 154, 255, 154, 154, 255, 154, 255, 154, 154, 255, 154, 255, 154, 154, 255, 154, 255, 255,
-	154, 255, 154, 255, 154, 154, 255, 154, 255, 255, 255, 255, 154, 255, 154, 154, 255, 154, 255, 154,
-	154, 154, 255, 52, 255, 255, 154, 208, 182, 255, 255, 182, 91, 154, 255, 255, 124, 255, 154, 154,
-	255, 91, 124, 255, 154, 154, 208, 154, 208, 255, 255, 91, 154, 91, 154, 154, 255, 124, 208, 255,
-	255, 154, 91, 154, 255, 255, 182, 208, 154, 255, 255, 154, 91, 182, 255, 255, 154, 208, 154, 255,
-	154, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 154,
-}
 
 var cosxCosyTinyBinIndex = []int{
 	8297, 6740, 5445, 4281, 3509, 3258, 3395, 4180, 5224, 6656, 8344, 9900, 11324,
@@ -158,47 +119,6 @@ var cosxCosyTinyBinVals = []uint32{
 }
 
 var expectedMax uint32 = 8
-var expectedDelentropy float64 = 6.775012499324645
-var expectedMaxDelentropy float64 = 0.12179180114985422
-var expectedDelentropyArray = []float64{
-	0, 0.023534224451211, 0.04152828269743585, 0, 0.0719762329848994,
-	0.0855114533517979, 0.09824198104431049, 0, 0.12179180114985422,
-}
-
-var cosxCosyTinyDelentropyImageArray = []uint8{
-	205, 150, 86, 86, 86, 86, 86, 150, 150, 49, 86, 205, 205, 86, 205, 86, 86, 205, 205,
-	205, 205, 150, 150, 86, 205, 86, 255, 150, 86, 150, 205, 86, 205, 86, 86, 150, 86, 205,
-	86, 86, 86, 86, 86, 86, 255, 86, 86, 49, 86, 86, 205, 86, 205, 205, 205, 150, 86,
-	86, 205, 205, 205, 179, 150, 86, 205, 86, 86, 86, 150, 86, 205, 179, 205, 205, 86, 86,
-	205, 86, 205, 179, 179, 179, 86, 86, 86, 49, 86, 86, 86, 179, 179, 179, 205, 86, 205,
-	86, 150, 205, 205, 179, 205, 86, 150, 86, 86, 86, 205, 150, 150, 179, 205, 86, 205, 86,
-	150, 150, 205, 205, 205, 205, 86, 86, 86, 49, 205, 86, 255, 150, 86, 86, 205, 86, 205,
-	86, 205, 150, 150, 86, 205, 86, 205, 150, 86, 86, 255, 86, 205, 86, 86, 150, 205, 205,
-	86, 86, 150, 86, 205, 86, 86, 205, 205, 179, 150, 86, 205, 86, 86, 86, 150, 150, 86,
-	49, 205, 86, 205, 49, 205, 86, 205, 179, 179, 179, 86, 49, 86, 49, 86, 49, 86, 49,
-	86, 205, 205, 86, 205, 86, 86, 205, 205, 179, 205, 150, 86, 86, 86, 86, 86, 150, 150,
-	150, 205, 86, 205, 86, 86, 150, 86, 205, 205, 205, 205, 150, 150, 86, 205, 86, 255, 150,
-	86, 86, 205, 86, 205, 205, 205, 150, 86, 86, 86, 86, 86, 86, 86, 86, 255, 86, 86,
-	86, 150, 86, 205, 179, 205, 205, 86, 86, 205, 86, 205, 205, 205, 179, 150, 86, 205, 86,
-	86, 86, 86, 179, 179, 179, 205, 86, 205, 49, 205, 86, 205, 179, 179, 179, 86, 86, 86,
-	86, 205, 150, 150, 179, 205, 86, 205, 86, 205, 86, 150, 205, 205, 179, 205, 86, 150, 86,
-	205, 86, 255, 150, 86, 86, 205, 86, 205, 86, 150, 150, 205, 205, 205, 205, 86, 86, 86,
-	86, 255, 86, 205, 86, 86, 150, 205, 205, 205, 86, 205, 150, 150, 86, 205, 86, 205, 150,
-	150, 86, 205, 86, 86, 86, 150, 150, 86, 49, 86, 86, 150, 86, 205, 86, 86, 205, 205,
-}
-
-var CosxCosyTinyDelentropyImage = image.Gray{
-	cosxCosyTinyDelentropyImageArray,
-	19,
-	image.Rectangle{image.Point{0, 0}, image.Point{19, 19}},
-}
-
-var sgrayCosxCosyTinyDelentropy *SippGray
-
-func init() {
-	sgrayCosxCosyTinyDelentropy = new(SippGray)
-	sgrayCosxCosyTinyDelentropy.Gray = &CosxCosyTinyDelentropyImage
-}
 
 // 0th entry is 0, then next 16 entries should have a 1, all others 0
 func checkHist(t *testing.T, hist []uint32) {
@@ -223,46 +143,18 @@ func TestGreyHist(t *testing.T) {
 	checkHist(t, hist)
 }
 
-func TestConventionalEntropy(t *testing.T) {
-	ent, entIm := Entropy(SgrayCosxCosyTiny)
-	if ent != cosxCosyTinyEntropy {
-		t.Errorf("Error: Incorrect conventional entropy: expected %v, got %v",
-			cosxCosyTinyEntropy, ent)
-	}
-	if !reflect.DeepEqual(entIm.Pix(), cosxCosyTinyEntropyImage) {
-		t.Error("Error: Entropy image incorrect. Expected:" +
-			GrayArrayToString(cosxCosyTinyEntropyImage, cosxCosyTinyStride) + "Got:" +
-			GrayArrayToString(entIm.Pix(), cosxCosyTinyStride))
-	}
-	ent16, entIm16 := Entropy(Sgray16)
-	if ent16 != smallPic16Entropy {
-		t.Errorf("Error: Incorrect conventional entropy: expected %v, got %v",
-			smallPic16Entropy, ent16)
-	}
-	if !reflect.DeepEqual(entIm16.Pix(), smallPicEntropyImage) {
-		t.Error("Error: Entropy image incorrect. Expected:" +
-			GrayArrayToString(smallPicEntropyImage, 4) + "Got:" +
-			GrayArrayToString(entIm16.Pix(), 4))
-	}
-}
-
 type histTest struct {
-	name                    string
-	grad                    []complex128
-	radius                  uint16
-	stride                  int
-	maxMod                  float64
-	count                   int
-	binIndex                []int
-	binVals                 []uint32
-	maxBinVal               uint32
-	delentropy              float64
-	maxdelentropy           float64
-	delentropyArray         []float64
-	histDelentropyImageName string
-	delentropyImage         *SippGray
-	suppressedImageName     string
-	renderedHistogramName   string
+	name                  string
+	grad                  []complex128
+	radius                uint16
+	stride                int
+	maxMod                float64
+	count                 int
+	binIndex              []int
+	binVals               []uint32
+	maxBinVal             uint32
+	suppressedImageName   string
+	renderedHistogramName string
 }
 
 func TestHist(t *testing.T) {
@@ -271,17 +163,12 @@ func TestHist(t *testing.T) {
 			"CosxCosyTinyGrad RADIUS = 0",
 			CosxCosyTinyGrad,
 			0,
-			cosxCosyTinyStride,
+			CosxCosyTinyStride,
 			CosxCosyTinyGradMaxMod,
 			expectedCosxCosyTinyNonZeroHistCount,
 			cosxCosyTinyBinIndex,
 			cosxCosyTinyBinVals,
 			expectedMax,
-			expectedDelentropy,
-			expectedMaxDelentropy,
-			expectedDelentropyArray,
-			"cosxcosy_tiny_hist_delent.png",
-			sgrayCosxCosyTinyDelentropy,
 			"cosxcosy_tiny_hist_sup.png",
 			"cosxcosy_tiny_hist.png",
 		},
@@ -289,17 +176,12 @@ func TestHist(t *testing.T) {
 			"CosxCosyTinyGrad RADIUS = 255",
 			CosxCosyTinyGrad,
 			255,
-			cosxCosyTinyStride,
+			CosxCosyTinyStride,
 			CosxCosyTinyGradMaxMod,
 			expectedCosxCosyTinyNonZeroHistCount,
 			cosxCosyTinyBinIndexRadius255,
 			cosxCosyTinyBinVals,
 			expectedMax,
-			expectedDelentropy,
-			expectedMaxDelentropy,
-			expectedDelentropyArray,
-			"cosxcosy_tiny_radius255_hist_delent.png",
-			sgrayCosxCosyTinyDelentropy,
 			"cosxcosy_tiny_radius255_hist_sup.png",
 			"cosxcosy_tiny_radius255_hist.png",
 		},
@@ -308,20 +190,20 @@ func TestHist(t *testing.T) {
 	for _, test := range tests {
 		grad := FromComplexArray(test.grad, test.stride-1)
 		hist := Hist(grad, test.radius)
-		if hist.grad != grad {
+		if hist.Grad != grad {
 			t.Errorf("Error: SippHist for %s has incorrect grad, expected %v, got %v",
-				test.name, grad, hist.grad)
+				test.name, grad, hist.Grad)
 		}
 		xpctRadius := test.radius
 		if test.radius == 0 {
 			xpctRadius = uint16(test.maxMod) + radiusMargin
 		}
-		if hist.radius != xpctRadius {
+		if hist.Radius != xpctRadius {
 			t.Errorf("Error: radius for %s histogram incorrect. Expected %v, got %v",
-				test.name, xpctRadius, hist.radius)
+				test.name, xpctRadius, hist.Radius)
 		}
 		count := 0
-		for _, val := range hist.bin {
+		for _, val := range hist.Bin {
 			if val != 0 {
 				count++
 			}
@@ -331,57 +213,22 @@ func TestHist(t *testing.T) {
 			t.Errorf("Error: Histogram for %s has incorrect number of non-zero entries: expected %v, got %v",
 				test.name, xpctCnt, count)
 		}
-		if !reflect.DeepEqual(hist.binIndex, test.binIndex) {
+		if !reflect.DeepEqual(hist.BinIndex, test.binIndex) {
 			t.Errorf("Error: hist.binIndex for %s incorrect, expected\n%v\n got\n%v\n",
-				test.name, test.binIndex, hist.binIndex)
+				test.name, test.binIndex, hist.BinIndex)
 		}
-		for i, val := range hist.binIndex {
-			if hist.bin[val] != test.binVals[i] {
+		for i, val := range hist.BinIndex {
+			if hist.Bin[val] != test.binVals[i] {
 				t.Errorf("Error: histogram value for %s incorrect, expected %v, got %v",
-					test.name, test.binVals[i], hist.bin[val])
+					test.name, test.binVals[i], hist.Bin[val])
 			}
 		}
-		if hist.max != test.maxBinVal {
-			t.Errorf("Error: hist.max for %s incorrect. Expected %v, got %v",
-				test.name, test.maxBinVal, hist.max)
-		}
-		histDentImage := hist.HistDelentropyImage()
-		if histDentImage != nil {
-			t.Error("HistDelentropyImage returned non-nil before Delentropy called")
-		}
-		delentImage := hist.DelEntropyImage()
-		if delentImage != nil {
-			t.Error("DelentropyImage returned non-nil before Delentropy called")
-		}
-		dent := hist.Delentropy()
-		if dent != test.delentropy {
-			t.Errorf("Error: delentropy for %s incorrect. Expected %v, got %v",
-				test.name, test.delentropy, dent)
-		}
-		if test.maxdelentropy != hist.maxDelentropy {
-			t.Errorf("Error: maxdelentropy for %s incorrect. Expected %v, got %v",
-				test.name, test.maxdelentropy, hist.maxDelentropy)
-		}
-		if !reflect.DeepEqual(test.delentropyArray, hist.delentropy) {
-			t.Errorf("Error: delentropy array for %s incorrect. Expected %v, got %v",
-				test.name, test.delentropyArray, hist.delentropy)
-		}
-		histDentImage = hist.HistDelentropyImage()
-		check, err := Read(filepath.Join(TestDir, test.histDelentropyImageName))
-		if err != nil {
-			t.Errorf("Error reading histogram delentropy check image: %v\n", test.histDelentropyImageName)
-		}
-		if !reflect.DeepEqual(histDentImage.Pix(), check.Pix()) {
-			t.Errorf("Error: histogram delentropy image incorrect. Expected %v, got%v\n",
-				check.Pix(), histDentImage.Pix())
-		}
-		delentImage = hist.DelEntropyImage()
-		if !reflect.DeepEqual(delentImage.Pix(), test.delentropyImage.Pix()) {
-			t.Errorf("Error: gradient delentropy image incorrect. Expected %v, got %v\n",
-				test.delentropyImage.Pix(), delentImage.Pix())
+		if hist.Max != test.maxBinVal {
+			t.Errorf("Error: hist.Max for %s incorrect. Expected %v, got %v",
+				test.name, test.maxBinVal, hist.Max)
 		}
 		supp := hist.RenderSuppressed()
-		check, err = Read(filepath.Join(TestDir, test.suppressedImageName))
+		check, err := Read(filepath.Join(TestDir, test.suppressedImageName))
 		if err != nil {
 			t.Errorf("Error reading suppressed histogram check image: %v\n", test.suppressedImageName)
 		}

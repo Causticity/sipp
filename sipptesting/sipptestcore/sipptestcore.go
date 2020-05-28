@@ -116,3 +116,5 @@ var CosxCosyTiny = image.Gray {
     20,
     image.Rectangle{image.Point{0, 0}, image.Point{20,20}},
 }
+
+var CosxCosyTinyStride = 20

@@ -13,6 +13,7 @@ import (
 )
 
 import (
+	"github.com/Causticity/sipp/sentropy"
 	"github.com/Causticity/sipp/simage"
     "github.com/Causticity/sipp/sgrad"
     "github.com/Causticity/sipp/shist"
@@ -156,8 +157,8 @@ func main() {
 		}
 	}
 
-	gradEnt := hist.Delentropy()
-	delentropy := gradEnt/2.0
+	sippDel := sentropy.Delentropy(hist)
+	delentropy := sippDel.Delentropy/2.0
 		
 	if *csv {
 		fmt.Printf("%s,%.2f\n",*in, delentropy)
@@ -165,7 +166,7 @@ func main() {
 		fmt.Println("Delentropy:", delentropy)
 	}
 	if *hde {
-		histEntImg := hist.HistDelentropyImage()
+		histEntImg := sippDel.HistDelentropyImage()
 		histEntName := *out + "_hist_delent.png"
 		err = histEntImg.Write(&histEntName)
 		if err != nil {
@@ -175,7 +176,7 @@ func main() {
 	}
 	
 	if *de {
-		delEntImg := hist.DelEntropyImage()
+		delEntImg := sippDel.DelEntropyImage()
 		delEntName := *out + "_delent.png"
 		err = delEntImg.Write(&delEntName)
 		if err != nil {
@@ -184,7 +185,7 @@ func main() {
 		}
 	}
 	
-	ent, entImg := shist.Entropy(src)
+	ent, entImg := sentropy.Entropy(src)
 	if *v {
 		fmt.Println("Conventional entropy of the source image:", ent)
 	}

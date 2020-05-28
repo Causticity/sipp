@@ -1,1 +1,1 @@
-./simage ./scomplex ./sgrad ./shist ./sfft
+./simage ./scomplex ./sgrad ./shist ./sfft ./sentropy
