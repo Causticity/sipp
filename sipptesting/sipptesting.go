@@ -8,8 +8,8 @@
 package sipptesting
 
 import (
-    . "github.com/Causticity/sipp/simage"
-    "github.com/Causticity/sipp/sipptesting/sipptestcore"
+	. "github.com/Causticity/sipp/simage"
+	"github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
 
 var Sgray *SippGray
@@ -17,10 +17,10 @@ var Sgray16 *SippGray16
 var SgrayCosxCosyTiny *SippGray
 
 func init() {
-    Sgray = new(SippGray)
-    Sgray.Gray = &sipptestcore.Gray
-    Sgray16 = new(SippGray16)
-    Sgray16.Gray16 = &sipptestcore.Gray16
-    SgrayCosxCosyTiny = new(SippGray)
-    SgrayCosxCosyTiny.Gray = &sipptestcore.CosxCosyTiny
+	Sgray = new(SippGray)
+	Sgray.Gray = &sipptestcore.Gray
+	Sgray16 = new(SippGray16)
+	Sgray16.Gray16 = &sipptestcore.Gray16
+	SgrayCosxCosyTiny = new(SippGray)
+	SgrayCosxCosyTiny.Gray = &sipptestcore.CosxCosyTiny
 }

@@ -9,7 +9,7 @@ import (
 	"image"
 	"math"
 
-    "github.com/davidkleiven/gosfft/sfft"
+	"github.com/davidkleiven/gosfft/sfft"
 )
 
 import (
@@ -25,8 +25,8 @@ func FFT(src SippImage) (fft *FFTImage) {
 	comp := ToShiftedComplex(src)
 	fft = &FFTImage{*comp}
 
-    ft := sfft.NewFFT2(fft.Rect.Dy(), fft.Rect.Dx())
-    ft.FFT(fft.Pix)
+	ft := sfft.NewFFT2(fft.Rect.Dy(), fft.Rect.Dx())
+	ft.FFT(fft.Pix)
 
 	return fft
 }
