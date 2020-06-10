@@ -13,7 +13,7 @@ import (
 )
 
 import (
-	. "github.com/Causticity/sipp/sipptesting/sipptestcore"
+    . "github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
 
 // TODO. The coverage tool shows that we aren't testing 3 code paths:
@@ -23,7 +23,7 @@ import (
 //   minimum fraction.
 // These should be corrected at some point, but the first is trivial and the
 // other two only apply to thumbnail generation, so this is low priority.
-func TestRead(t *testing.T) {
+func TestRead (t *testing.T) {
 	// Read a file that doesn't exist
 	_, err := Read("blahblah")
 	if err == nil {
@@ -31,9 +31,9 @@ func TestRead(t *testing.T) {
 	} else {
 		t.Log(err) // What did happen? Can we check that it's the right error?
 	}
-
+	
 	// Read a file that exists but isn't a png
-	_, err = Read(filepath.Join(TestDir, "README"))
+	_, err = Read(filepath.Join(TestDir,"README"))
 	if err == nil {
 		t.Error("Error: Read of non-image file succeeded!")
 	} else {
@@ -41,7 +41,7 @@ func TestRead(t *testing.T) {
 	}
 
 	// Read a file that isn't gray
-	_, err = Read(filepath.Join(TestDir, "mandrill.png"))
+	_, err = Read(filepath.Join(TestDir,"mandrill.png"))
 	if err == nil {
 		t.Error("Error: Read of non-gray succeeded!")
 	} else {
@@ -49,8 +49,8 @@ func TestRead(t *testing.T) {
 	}
 }
 
-func TestGraySippImage(t *testing.T) {
-	barb, err := Read(filepath.Join(TestDir, "barbara.png"))
+func TestGraySippImage (t *testing.T) {
+	barb, err := Read(filepath.Join(TestDir,"barbara.png"))
 	if err != nil {
 		t.Fatal("Fatal: Can't read 8-bit test image")
 	}
@@ -67,21 +67,21 @@ func TestGraySippImage(t *testing.T) {
 	if &(gray.Pix()[0]) != &(gray.Gray.Pix[0]) {
 		t.Error("Error: Pix return incorrect for 8-bit image")
 	}
-
+	
 	// Val
 	b := gray.Bounds()
-	x := b.Dx() / 2
-	y := b.Dy() / 2
+	x := b.Dx()/2
+	y := b.Dy()/2
 	val := gray.At(x, y).(color.Gray).Y
 	if float64(val) != gray.Val(x, y) {
 		t.Errorf("Error: Val failed for gray at pixel %d, %d", x, y)
 	}
-
+	
 	// Write
-	name := filepath.Join(TestDir, "test.png")
+	name := filepath.Join(TestDir,"test.png")
 	err = barb.Write(&name)
 	if err != nil {
-		t.Fatal("Error writing gray: " + err.Error())
+		t.Fatal("Error writing gray: "+ err.Error())
 	}
 	// read it back in
 	comp, err := Read(name)
@@ -89,11 +89,11 @@ func TestGraySippImage(t *testing.T) {
 		t.Fatal("Error reading written gray")
 	}
 	if !reflect.DeepEqual(barb, comp) {
-		t.Error("Error: written gray and read differ; written saved as " + name)
+		t.Error("Error: written gray and read differ; written saved as "+ name)
 	} else {
 		err = os.Remove(name)
 	}
-
+		
 	// Thumbnail
 	thm := barb.Thumbnail()
 	name = filepath.Join(TestDir, "barb_thumb.png")
@@ -106,8 +106,8 @@ func TestGraySippImage(t *testing.T) {
 	}
 }
 
-func TestGray16SippImage(t *testing.T) {
-	cc, err := Read(filepath.Join(TestDir, "cosxcosy.png"))
+func TestGray16SippImage (t *testing.T) {
+	cc, err := Read(filepath.Join(TestDir,"cosxcosy.png"))
 	if err != nil {
 		t.Fatal("Fatal: Can't read 16-bit test image")
 	}
@@ -127,18 +127,18 @@ func TestGray16SippImage(t *testing.T) {
 
 	// Val
 	b := gray16.Bounds()
-	x := b.Dx() / 2
-	y := b.Dy() / 2
+	x := b.Dx()/2
+	y := b.Dy()/2
 	val := gray16.At(x, y).(color.Gray16).Y
 	if float64(val) != gray16.Val(x, y) {
 		t.Errorf("Error: Val failed for gray16 at pixel %d, %d", x, y)
 	}
-
+	
 	// Write
-	name := filepath.Join(TestDir, "test16.png")
+	name := filepath.Join(TestDir,"test16.png")
 	err = cc.Write(&name)
 	if err != nil {
-		t.Fatal("Error writing gray16: " + err.Error())
+		t.Fatal("Error writing gray16: "+ err.Error())
 	}
 	// read it back in
 	comp, err := Read(name)
@@ -146,11 +146,11 @@ func TestGray16SippImage(t *testing.T) {
 		t.Fatal("Error reading written gray16")
 	}
 	if !reflect.DeepEqual(cc, comp) {
-		t.Error("Error: written gray16 and read differ; written saved as " + name)
+		t.Error("Error: written gray16 and read differ; written saved as "+ name)
 	} else {
 		err = os.Remove(name)
 	}
-
+		
 	// Thumbnail
 	thm := cc.Thumbnail()
 	name = filepath.Join(TestDir, "cosxcosy_thumb.png")
