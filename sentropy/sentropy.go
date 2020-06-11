@@ -12,52 +12,73 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
-// Entropy calculates the conventional entropy of the given image.
-func Entropy(im SippImage) (float64, SippImage) {
-	hist := GreyHist(im)
+// SippEntropy is a structure that holds a reference to an image, the 1D
+// histogram of its values, and the entropy values derived from the histogram.
+type SippEntropy struct {
+	// A reference to the image.
+	Im SippImage
+	// A reference to the 1D histogram
+	Hist []uint32
+	// The entropy for each bin value that actually occurred.
+	BinEntropy []float64
+	// The largest entropy value of any bin.
+	MaxBinEntropy float64
+	// The entropy for the image, i.e. the sum of the entropies for all
+	// the bins.
+	Entropy float64
+}
+
+// Entropy returns a SippEntropy structure for the given image.
+func Entropy(im SippImage) (ent *SippEntropy) {
+	ent = new(SippEntropy)
+	ent.Im = im
+	ent.Hist = GreyHist(im)
 	total := float64(im.Bounds().Dx() * im.Bounds().Dy())
-	normHist := make([]float64, len(hist))
+	normHist := make([]float64, len(ent.Hist))
 	var check float64
-	for i, binVal := range hist {
+	for i, binVal := range ent.Hist {
 		normHist[i] = float64(binVal) / total
 		check = check + normHist[i]
 	}
 	//fmt.Println("Normalised histogram sums to ", check)
-	entHist := make([]float64, len(hist))
-	var ent, maxEnt float64
+	ent.BinEntropy = make([]float64, len(ent.Hist))
 	for j, p := range normHist {
 		if p > 0 {
-			entHist[j] = -1.0 * p * math.Log2(p)
-			ent = ent + entHist[j]
-			if entHist[j] > maxEnt {
-				maxEnt = entHist[j]
+			ent.BinEntropy[j] = -1.0 * p * math.Log2(p)
+			ent.Entropy = ent.Entropy + ent.BinEntropy[j]
+			if ent.BinEntropy[j] > ent.MaxBinEntropy {
+				ent.MaxBinEntropy = ent.BinEntropy[j]
 			}
 		}
 	}
-	//fmt.Println("maxEnt is ", maxEnt)
+	return
+}
+
+// EntropyImage returns a greyscale image of the entropy for each pixel.
+func (ent *SippEntropy) EntropyImage() SippImage {
 	entIm := new(SippGray)
-	entIm.Gray = image.NewGray(im.Bounds())
+	entIm.Gray = image.NewGray(ent.Im.Bounds())
 	entImPix := entIm.Pix()
 
 	// scale the entropy from (0-maxEnt) to (0-255)
 	is16 := false
-	if im.Bpp() == 16 {
+	if ent.Im.Bpp() == 16 {
 		is16 = true
 	}
-	scale := 255.0 / maxEnt
-	width := im.Bounds().Dx()
-	imPix := im.Pix()
-	for y := 0; y < im.Bounds().Dy(); y++ {
+	scale := 255.0 / ent.MaxBinEntropy
+	width := ent.Im.Bounds().Dx()
+	imPix := ent.Im.Pix()
+	for y := 0; y < ent.Im.Bounds().Dy(); y++ {
 		for x := 0; x < width; x++ {
-			index := im.PixOffset(x, y)
+			index := ent.Im.PixOffset(x, y)
 			var val uint16 = uint16(imPix[index])
 			if is16 {
 				val = val<<8 | uint16(imPix[index+1])
 			}
-			entImPix[y*width+x] = uint8(math.Floor(entHist[val] * scale))
+			entImPix[y*width+x] = uint8(math.Floor(ent.BinEntropy[val] * scale))
 		}
 	}
-	return ent, entIm
+	return entIm
 }
 
 // SippDelentropy is a structure that holds a reference to a gradient histogram
@@ -117,7 +138,7 @@ func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 }
 
 // DelEntropyImage returns a greyscale image of the entropy for each gradient
-// pixel. DelEntropy must have been called first.
+// pixel.
 func (dent *SippDelentropy) DelEntropyImage() SippImage {
 	// Make a greyscale image of the entropy for each bin.
 	dentGray := new(SippGray)

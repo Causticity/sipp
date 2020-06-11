@@ -99,21 +99,23 @@ func init() {
 }
 
 func TestConventionalEntropy(t *testing.T) {
-	ent, entIm := Entropy(SgrayCosxCosyTiny)
-	if ent != cosxCosyTinyEntropy {
+	ent := Entropy(SgrayCosxCosyTiny)
+	if ent.Entropy != cosxCosyTinyEntropy {
 		t.Errorf("Error: Incorrect conventional entropy: expected %v, got %v",
-			cosxCosyTinyEntropy, ent)
+			cosxCosyTinyEntropy, ent.Entropy)
 	}
+	entIm := ent.EntropyImage()
 	if !reflect.DeepEqual(entIm.Pix(), cosxCosyTinyEntropyImage) {
 		t.Error("Error: Entropy image incorrect. Expected:" +
 			GrayArrayToString(cosxCosyTinyEntropyImage, CosxCosyTinyStride) + "Got:" +
 			GrayArrayToString(entIm.Pix(), CosxCosyTinyStride))
 	}
-	ent16, entIm16 := Entropy(Sgray16)
-	if ent16 != smallPic16Entropy {
+	ent16 := Entropy(Sgray16)
+	if ent16.Entropy != smallPic16Entropy {
 		t.Errorf("Error: Incorrect conventional entropy: expected %v, got %v",
-			smallPic16Entropy, ent16)
+			smallPic16Entropy, ent16.Entropy)
 	}
+	entIm16 := ent16.EntropyImage()
 	if !reflect.DeepEqual(entIm16.Pix(), smallPicEntropyImage) {
 		t.Error("Error: Entropy image incorrect. Expected:" +
 			GrayArrayToString(smallPicEntropyImage, 4) + "Got:" +

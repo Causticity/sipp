@@ -179,11 +179,12 @@ func main() {
 		}
 	}
 
-	ent, entImg := sentropy.Entropy(src)
+	ent := sentropy.Entropy(src)
 	if *v {
 		fmt.Println("Conventional entropy of the source image:", ent)
 	}
 
+	entImg := ent.EntropyImage()
 	if *e {
 		entName := *out + "_conv_ent.png"
 		err = entImg.Write(&entName)
