@@ -7,10 +7,10 @@
 package stree
 
 import (
-    "fmt"
-    "image"
-    "path/filepath"
-    
+	"fmt"
+	"image"
+	"path/filepath"
+
 	"gopkg.in/qml.v1"
 
 	. "github.com/Causticity/sipp/simage"
@@ -20,55 +20,55 @@ import (
 // produced each image from its parent in the tree. A SippNode is a node in the
 // tree.
 type SippNode struct {
-	
+
 	// The Image(s) at this node.
 	Src []SippImage
-	
+
 	// The operation that got us here from the Parent node, i.e. Src = Op(...)
 	SippOp
-	
+
 	// The UI object that corresponds to this node.
 	QmlNode *qml.Window
-	
+
 	// The UI object(s) that correspond(s) to the window(s) displaying the full
 	// image(s) for this node.
 	QmlImage *qml.Window
-	
-	// The parameters to the SippOp that got us here. This is also used to 
+
+	// The parameters to the SippOp that got us here. This is also used to
 	// store raw base data for nodes that have images only as visualisations
 	// of underlying data. For example, the gradient operation produces a
 	// GradImage (see sgrad.go) and must be rendered to obtain images of the
 	// real and imaginary parts.
 	Params SippOpParams
-	
+
 	// The nodes that have been derived (and retained) from this node.
 	// The slice itself is nil at a leaf.
 	Children []*SippNode
-	
+
 	// The node that this one was derived from, nil at the root of the tree.
 	Parent *SippNode
-	
+
 	// The name of this image, to be used for window titles and as a key
 	// in a map of nodes. Must be unique so that a map can work as a lookup
 	// mechanism.
 	Name string
 }
 
-// A SippOp specifies a function that takes a slice of source images and an 
+// A SippOp specifies a function that takes a slice of source images and an
 // arbitrary set of parameters, and returns a slice of result images.
 type SippOp interface {
-	Op([]*SippImage, *SippOpParams) ([]*SippImage)
+	Op([]*SippImage, *SippOpParams) []*SippImage
 }
 
 // A type used only to allow storing an arbitrary set of parameters as part of
 // a SippNode.
-type SippOpParams interface {}
+type SippOpParams interface{}
 
 var treeComponent qml.Object
 var srcImageComponent qml.Object
 
-// Package-wide initialisation, but it requires that the QML Engine be 
-// available, so it can't be done as an actual package init, but must be 
+// Package-wide initialisation, but it requires that the QML Engine be
+// available, so it can't be done as an actual package init, but must be
 // called explicitly once the Engine is created inside the QML run method.
 func InitTreeComponents(engine *qml.Engine) error {
 	var err error
@@ -80,24 +80,23 @@ func InitTreeComponents(engine *qml.Engine) error {
 	if err != nil {
 		return err
 	}
-	
+
 	engine.AddImageProvider("thumb", thumbProvider)
 	engine.AddImageProvider("src", srcProvider)
-
 
 	return err
 }
 
 var nodeMap = make(map[string]*SippNode)
 
-// NewSippRootNode initialises a new root SippNode by loading the given file. 
+// NewSippRootNode initialises a new root SippNode by loading the given file.
 // Returns nil on error.
 func NewSippRootNode(url string) {
 	if treeComponent == nil {
 		panic("InitTreeComponents must be called before building tree UIs.")
 	}
 	newGuy := new(SippNode)
-	newGuy.Src = make([]SippImage,1)
+	newGuy.Src = make([]SippImage, 1)
 	var err error
 	// strip off the "file://" prefix by referencing the string from index 7
 	filename := url[7:]
@@ -128,7 +127,7 @@ func NewSippRootNode(url string) {
 	newGuy.QmlNode.Show()
 }
 
-func uniquefy (id string) string {
+func uniquefy(id string) string {
 	unique := id
 	i := 1
 	for _, ok := nodeMap[id]; ok; _, ok = nodeMap[unique] {
@@ -156,7 +155,7 @@ func (victim *SippNode) Close() {
 	}
 	victim.CloseImage()
 	victim.QmlNode.Destroy()
-	delete (nodeMap, victim.Name)
+	delete(nodeMap, victim.Name)
 }
 
 func (victim *SippNode) thumbClicked() {
@@ -170,21 +169,21 @@ func (victim *SippNode) thumbClicked() {
 func (victim *SippNode) gradientClicked() {
 	fmt.Println("I'ma do you a gradient!")
 	/*
-	// This will become a parameter to the gradient op.
-	k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
-						 "The histogram will be 2K+1 bins on a side.\n"+
-						 "        This is used only for 16-bit images.\n"+
-						 "        If K is omitted, it is computed from "+
-						 "the maximum excursion of the gradient.\n"+
-						 "        8-bit images always use a 511x511 histogram, "+
-						 "as that covers the entire possible space.")
+		// This will become a parameter to the gradient op.
+		k = flag.Int("K", 0, "Number of bins to scale the max radius to. "+
+							 "The histogram will be 2K+1 bins on a side.\n"+
+							 "        This is used only for 16-bit images.\n"+
+							 "        If K is omitted, it is computed from "+
+							 "the maximum excursion of the gradient.\n"+
+							 "        8-bit images always use a 511x511 histogram, "+
+							 "as that covers the entire possible space.")
 
-	// This test will move to the gradient op. Specifically, it won't be 
-	// manipulable in the UI for 8-bit images, but it will be displayed.
-	if src.Bpp() == 8 {
-		*k = 255
-		fmt.Println("Image is 8-bit. K forced to 255.")
-	}
+		// This test will move to the gradient op. Specifically, it won't be
+		// manipulable in the UI for 8-bit images, but it will be displayed.
+		if src.Bpp() == 8 {
+			*k = 255
+			fmt.Println("Image is 8-bit. K forced to 255.")
+		}
 	*/
 }
 

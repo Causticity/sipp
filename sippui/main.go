@@ -5,8 +5,8 @@
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
 	"gopkg.in/qml.v1"
 
@@ -48,4 +48,3 @@ func run() error {
 
 	return nil
 }
-

@@ -3,9 +3,9 @@
 package scomplex
 
 import (
+	"fmt"
 	"image"
-    "fmt"
-    "math"
+	"math"
 )
 
 import (
@@ -27,7 +27,7 @@ func ToShiftedComplex(src SippImage) (comp *ComplexImage) {
 	comp.Rect = src.Bounds()
 	width := comp.Rect.Dx()
 	height := comp.Rect.Dy()
-	size := width*height
+	size := width * height
 	comp.Pix = make([]complex128, size)
 	// Multiply by (-1)^(x+y) while converting the pixels to complex numbers
 	shiftStart := 1.0
@@ -35,7 +35,7 @@ func ToShiftedComplex(src SippImage) (comp *ComplexImage) {
 	i := 0
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			comp.Pix[i] = complex(src.Val(x,y)*shift, 0)
+			comp.Pix[i] = complex(src.Val(x, y)*shift, 0)
 			i++
 			shift = -shift
 		}
@@ -69,7 +69,7 @@ func (comp *ComplexImage) Render() (SippImage, SippImage) {
 			maximag = imVal
 		}
 	}
-	fmt.Println("maxreal:",maxreal,", minreal:",minreal)
+	fmt.Println("maxreal:", maxreal, ", minreal:", minreal)
 	// compute scale and offset for each image
 	rscale := 255.0 / (maxreal - minreal)
 	iscale := 255.0 / (maximag - minimag)
@@ -83,9 +83,8 @@ func (comp *ComplexImage) Render() (SippImage, SippImage) {
 	for index, pix := range comp.Pix {
 		r := real(pix)
 		i := imag(pix)
-		rePix[index] = uint8((r - minreal)*rscale)
-		imPix[index] = uint8((i - minimag)*iscale)
+		rePix[index] = uint8((r - minreal) * rscale)
+		imPix[index] = uint8((i - minimag) * iscale)
 	}
 	return re, im
 }
-

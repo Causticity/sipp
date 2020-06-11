@@ -6,13 +6,13 @@ package sipptestcore
 
 import (
     "fmt"
-	"image"
-	"os"
-	"path/filepath"
+    "image"
+    "os"
+    "path/filepath"
 )
 
 var TestDir = filepath.Join(os.Getenv("GOPATH"), "src", "github.com", 
-							"Causticity", "sipp", "testdata")
+                            "Causticity", "sipp", "testdata")
 
 var smallPic = []uint8 {
     1,  2,  3,  4,
