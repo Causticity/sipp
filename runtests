@@ -1,3 +1,2 @@
 go test -coverprofile coverage.out ./simage ./scomplex ./sgrad ./shist ./sfft ./sentropy
-go install github.com/Causticity/sipp/sipp
-echo sipp built ok
+go install github.com/Causticity/sipp/sipp; echo sipp built ok
