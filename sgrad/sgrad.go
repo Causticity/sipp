@@ -1,7 +1,7 @@
-// Copyright Raul Vera 2015-2016
+// Copyright Raul Vera 2015-2020
 
 // Package sgrad provides facilities for the computation and rendering of
-// a finite-difference gradient image from a source SippImage.
+// a finite-difference gradient image from a source SippImage and a 2x2 kernel.
 package sgrad
 
 import (
@@ -13,39 +13,6 @@ import (
 	. "github.com/Causticity/sipp/scomplex"
 	. "github.com/Causticity/sipp/simage"
 )
-
-// GradImage stores a gradient image with a complex value at each pixel.
-type GradImage struct {
-	// A GradImage is a complex image
-	ComplexImage
-	// The maximum modulus value that occurs in this image. This is useful
-	// when computing a histogram of the modulus value.
-	// TODO: This is actually a property of a ComplexImage, so perhaps should
-	//   go there. It costs a bit, but the point here is cleanliness first.
-	//   Can it still be calculated here? Sure. Make it a public member of
-	//   ComplexImage and comment that all ops that make one should compute it.
-	MaxMod float64
-}
-
-// Wrap an array of complex numbers in a GradImage.
-func FromComplexArray(cpx []complex128, width int) (grad *GradImage) {
-	grad = new(GradImage)
-	grad.Pix = cpx
-	grad.Rect = image.Rect(0, 0, width, len(cpx)/width)
-	grad.MaxMod = 0
-	for _, c := range cpx {
-		re := real(c)
-		im := imag(c)
-		modsq := re*re + im*im
-		// store the maximum squared value, then take the root afterwards
-		if modsq > grad.MaxMod {
-			grad.MaxMod = modsq
-		}
-	}
-	grad.MaxMod = math.Sqrt(grad.MaxMod)
-
-	return
-}
 
 // TODO: The below could all be reimplemented to use only floating-point
 // arithmetic, with a conversion to complex only at the end. As it is now it
@@ -71,14 +38,14 @@ func byKernel(kern SippGradKernel, pix, right, below, belowRight float64) comple
 		kern[1][1]*complex(belowRight, 0)
 }
 
-// Use a 2x2 kernel to create a finite-differences gradient image, one pixel
-// narrower and shorter than the original. We'd rather reduce the size of the
-// output image than arbitrarily wrap around or extend the source image, as
+// Use a 2x2 kernel to create a finite-differences complex gradient image, one
+// pixel narrower and shorter than the original. We'd rather reduce the size of
+// the output image than arbitrarily wrap around or extend the source image, as
 // any such procedure could introduce errors into the statistics.
-func FdgradKernel(src SippImage, kern SippGradKernel) (grad *GradImage) {
+func FdgradKernel(src SippImage, kern SippGradKernel) (grad *ComplexImage) {
 	// Create the dst image from the bounds of the src
 	srect := src.Bounds()
-	grad = new(GradImage)
+	grad = new(ComplexImage)
 	grad.Rect = image.Rect(0, 0, srect.Dx()-1, srect.Dy()-1)
 	grad.Pix = make([]complex128, grad.Rect.Dx()*grad.Rect.Dy())
 	grad.MaxMod = 0
@@ -104,6 +71,6 @@ func FdgradKernel(src SippImage, kern SippGradKernel) (grad *GradImage) {
 
 // Use a default kernel to compute a finite-differences gradient. See
 // FdgradKernel for details.
-func Fdgrad(src SippImage) (grad *GradImage) {
+func Fdgrad(src SippImage) (grad *ComplexImage) {
 	return FdgradKernel(src, defaultKernel)
 }

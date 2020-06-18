@@ -6,7 +6,6 @@ package sgrad
 
 import (
 	//"fmt"
-	"image"
 	"math"
 	"reflect"
 	"testing"
@@ -46,22 +45,6 @@ var smallPicGradKieransKernel = []complex128{
 }
 
 // TODO Make this table-driven.
-
-func TestFromComplex(t *testing.T) {
-	grad := FromComplexArray(CosxCosyTinyGrad, 19)
-	if !reflect.DeepEqual(grad.Pix, CosxCosyTinyGrad) {
-		t.Error("Error: Gradient image array differs from the one constructed from")
-	}
-	rect := image.Rect(0, 0, 19, 19)
-	if !reflect.DeepEqual(grad.Rect, rect) {
-		t.Errorf("Error: Gradient image rect incorrect, expected %v, got %v\n",
-			rect, grad.Rect)
-	}
-	if grad.MaxMod != CosxCosyTinyGradMaxMod {
-		t.Errorf("Error: Incorrect max modulus. Expected: %v, got %v",
-			CosxCosyTinyGradMaxMod, grad.MaxMod)
-	}
-}
 
 func TestFdgrad(t *testing.T) {
 	grad := Fdgrad(Sgray)

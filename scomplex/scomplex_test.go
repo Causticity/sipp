@@ -13,6 +13,7 @@ import (
 import (
 	. "github.com/Causticity/sipp/simage"
 	. "github.com/Causticity/sipp/sipptesting"
+	. "github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
 
 var shiftedPic = []complex128{
@@ -43,6 +44,22 @@ var GrayZero = image.Gray{
 }
 
 var SgrayZero *SippGray
+
+func TestFromComplex(t *testing.T) {
+	cpx := FromComplexArray(CosxCosyTinyGrad, 19)
+	if !reflect.DeepEqual(cpx.Pix, CosxCosyTinyGrad) {
+		t.Error("Error: Complex image array differs from the one constructed from")
+	}
+	rect := image.Rect(0, 0, 19, 19)
+	if !reflect.DeepEqual(cpx.Rect, rect) {
+		t.Errorf("Error: Complex image rect incorrect, expected %v, got %v\n",
+			rect, cpx.Rect)
+	}
+	if cpx.MaxMod != CosxCosyTinyGradMaxMod {
+		t.Errorf("Error: Incorrect max modulus. Expected: %v, got %v",
+			CosxCosyTinyGradMaxMod, cpx.MaxMod)
+	}
+}
 
 func TestComplex(t *testing.T) {
 	SgrayZero = new(SippGray)

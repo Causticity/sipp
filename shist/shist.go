@@ -1,13 +1,8 @@
-// Copyright Raul Vera 2015-2016
+// Copyright Raul Vera 2015-2020
 
-// Package shist provides functions for computing and rendering a 2-dimensional
-// histogram of values of a complex gradient image, as well as a 2D Entropy
-// calculation based on the histogram.
-// TODO: This now has more than just the 2D histogram:
-//    - 1-D
-//    - both kinds of entropy
-//   Refactor this along cleaner lines. Some to sgrad.go, some to an entropy
-//   package.
+// Package shist provides functions for computing a histogram of values of an
+// image, and for computing and rendering a 2-dimensional histogram of values of
+// a complex gradient image.
 package shist
 
 import (
@@ -17,7 +12,7 @@ import (
 )
 
 import (
-	. "github.com/Causticity/sipp/sgrad"
+	. "github.com/Causticity/sipp/scomplex"
 	. "github.com/Causticity/sipp/simage"
 )
 
@@ -25,7 +20,7 @@ import (
 // image.
 type SippHist struct {
 	// A reference to the gradient image we are computing from
-	Grad *GradImage
+	Grad *ComplexImage
 	// The size of our histogram. It will be 2*Radius+1 on a side.
 	Radius uint16
 	// The histogram data.
@@ -74,14 +69,14 @@ func GreyHist(im SippImage) []uint32 {
 	return hist
 }
 
-// Hist computes the 2D histogram, 2*radius=1 on a side with 0,0 at the center,
+// Hist computes the 2D histogram, 2*radius+1 on a side with 0,0 at the center,
 // from the given gradient image.
 // TODO: For 16-bit images, this should use sparse techniques, because the max
 // mod may be huge, but there will only ever be as many values as pixels. In
 // general, we should avoid scaling down. We should always be able to deal with
 // the exact histogram, without any scaling into the bins. So perhaps get rid of
 // the "radius" argument entirely?
-func Hist(grad *GradImage, radius uint16) (hist *SippHist) {
+func Hist(grad *ComplexImage, radius uint16) (hist *SippHist) {
 	if radius == 0 {
 		if grad.MaxMod > maxRadius {
 			radius = maxRadius
