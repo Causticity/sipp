@@ -103,14 +103,12 @@ func Delentropy(hist *SippHist) (dent *SippDelentropy) {
 	dent.hist = hist
 	dent.binDelentropy = make([]float64, hist.Max+1)
 	total := float64(len(hist.Grad.Pix))
-	dent.maxBinDelentropy = 0.0
-	dent.Delentropy = 0.0
 	for _, bin := range hist.Bin {
 		if bin != 0 {
 			// compute the entropy only once for a given bin value.
 			if dent.binDelentropy[bin] == 0.0 {
 				p := float64(bin) / total
-				dent.binDelentropy[bin] = p * math.Log2(p) * -1.0
+				dent.binDelentropy[bin] = -1.0 * p * math.Log2(p)
 			}
 			dent.Delentropy += dent.binDelentropy[bin]
 			if dent.binDelentropy[bin] > dent.maxBinDelentropy {
@@ -125,7 +123,7 @@ func Delentropy(hist *SippHist) (dent *SippDelentropy) {
 // histogram bin.
 func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 	// Make a greyscale image of the entropy for each bin.
-	stride := int(2*dent.hist.Radius + 1)
+	stride := dent.hist.Side()
 	dentGray := new(SippGray)
 	dentGray.Gray = image.NewGray(image.Rect(0, 0, stride, stride))
 	dentGrayPix := dentGray.Pix()

@@ -21,8 +21,8 @@ import (
 type SippHist struct {
 	// A reference to the gradient image we are computing from
 	Grad *ComplexImage
-	// The size of our histogram. It will be 2*Radius+1 on a side.
-	Radius uint16
+	// The size of our histogram. It will be 2*radius+1 on a side.
+	radius uint16
 	// The histogram data.
 	Bin []uint32
 	// The index of the histogram bin for each gradient image pixel.
@@ -37,6 +37,11 @@ type SippHist struct {
 	maxSuppressed float64
 }
 
+// Side returns the size of the 2D histogram on a side.
+func (hist *SippHist) Side() int {
+	return int((2*hist.radius+1))
+}
+
 const maxRadius = 2048
 const radiusMargin = 8
 
@@ -44,7 +49,7 @@ const histSize8BPP = 256
 const histSize16BPP = 65536
 
 // GreyHist computes a 1D histogram of the greyscale values in the image.
-func GreyHist(im SippImage) []uint32 {
+func GreyHist(im SippImage) (hist []uint32) {
 	histSize := histSize8BPP
 	is16 := false
 	if im.Bpp() == 16 {
@@ -54,7 +59,7 @@ func GreyHist(im SippImage) []uint32 {
 
 	//fmt.Println("GreyHist histogram size is ", histSize)
 
-	hist := make([]uint32, histSize)
+	hist = make([]uint32, histSize)
 	imPix := im.Pix()
 	for y := 0; y < im.Bounds().Dy(); y++ {
 		for x := 0; x < im.Bounds().Dx(); x++ {
@@ -66,7 +71,7 @@ func GreyHist(im SippImage) []uint32 {
 			hist[val]++
 		}
 	}
-	return hist
+	return
 }
 
 // Hist computes the 2D histogram, 2*radius+1 on a side with 0,0 at the center,
@@ -89,7 +94,7 @@ func Hist(grad *ComplexImage, radius uint16) (hist *SippHist) {
 	// create the 2D histogram bins as 2radius+1 on a side, so always odd
 	hist = new(SippHist)
 	hist.Grad = grad
-	hist.Radius = radius
+	hist.radius = radius
 	hist.BinIndex = make([]int, len(grad.Pix))
 	stride := int(2*radius + 1)
 	histDataSize := stride * stride
@@ -132,14 +137,14 @@ func (hist *SippHist) Suppress() {
 	if hist.suppressed != nil {
 		return
 	}
-	stride := int(2*hist.Radius + 1)
+	stride := hist.Side()
 	size := stride * stride
 	hist.suppressed = make([]float64, size)
 	var index uint32 = 0
 	hist.maxSuppressed = 0
 	for y := 0; y < stride; y++ {
 		for x := 0; x < stride; x++ {
-			sscale := supScale(x, y, int(hist.Radius))
+			sscale := supScale(x, y, int(hist.radius))
 			hist.suppressed[index] = float64(hist.Bin[index]) * sscale
 			if hist.suppressed[index] > hist.maxSuppressed {
 				hist.maxSuppressed = hist.suppressed[index]
@@ -156,7 +161,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, scaled to use the full dynamic range of the image format.
 	hist.Suppress()
-	stride := int(2*hist.Radius + 1)
+	stride := hist.Side()
 	var scale float64 = 255.0 / hist.maxSuppressed
 	//fmt.Println("Suppressed Render scale factor:", scale)
 	rnd := new(SippGray)
@@ -173,7 +178,7 @@ func (hist *SippHist) RenderSuppressed() SippImage {
 func (hist *SippHist) Render() SippImage {
 	// Here we will generate an 8-bit output image of the same size as the
 	// histogram, clipped to 255.
-	stride := int(2*hist.Radius + 1)
+	stride := hist.Side()
 	//var scale float64 = 255.0 / float64(hist.Max)
 	//fmt.Println("Render scale factor:", scale)
 	rnd := new(SippGray)

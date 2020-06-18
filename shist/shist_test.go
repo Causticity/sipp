@@ -199,9 +199,9 @@ func TestHist(t *testing.T) {
 		if test.radius == 0 {
 			xpctRadius = uint16(test.maxMod) + radiusMargin
 		}
-		if hist.Radius != xpctRadius {
+		if hist.radius != xpctRadius {
 			t.Errorf("Error: radius for %s histogram incorrect. Expected %v, got %v",
-				test.name, xpctRadius, hist.Radius)
+				test.name, xpctRadius, hist.radius)
 		}
 		count := 0
 		for _, val := range hist.Bin {
