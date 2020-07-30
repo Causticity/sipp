@@ -1,9 +1,8 @@
-// An image where each pixel is a complex number.
+// Copyright Raul Vera 2015-2016
 
 package scomplex
 
 import (
-	"fmt"
 	"image"
 	"math"
 )
@@ -12,6 +11,7 @@ import (
 	. "github.com/Causticity/sipp/simage"
 )
 
+// A ComplexImage is an image where each pixel is a Go complex128.
 type ComplexImage struct {
 	// The "pixel" data.
 	Pix []complex128
@@ -22,7 +22,7 @@ type ComplexImage struct {
 	MaxMod float64
 }
 
-// Wrap an array of complex numbers in a ComplexImage.
+// FromComplexArray wraps an array of complex numbers in a ComplexImage.
 func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 	dst = new(ComplexImage)
 	dst.Pix = cpx
@@ -41,7 +41,7 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 	return
 }
 
-// ToShiftedComplex converts the input image into a complex image, multiplying
+// ToShiftedComplex converts the input image into a ComplexImage, multiplying
 // each pixel by (-1)^(x+y), in order for a subsequent FFT to be centred
 // properly.
 func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
@@ -98,10 +98,17 @@ func (comp *ComplexImage) Render() (SippImage, SippImage) {
 			maximag = imVal
 		}
 	}
-	fmt.Println("maxreal:", maxreal, ", minreal:", minreal)
 	// compute scale and offset for each image
-	rscale := 255.0 / (maxreal - minreal)
-	iscale := 255.0 / (maximag - minimag)
+	rdiv := maxreal - minreal
+	if rdiv < 1.0 {
+		rdiv = 1.0
+	}
+	idiv := maximag - minimag
+	if idiv < 1.0 {
+		idiv = 1.0
+	}
+	rscale := 255.0 / rdiv
+	iscale := 255.0 / idiv
 	re := new(SippGray)
 	re.Gray = image.NewGray(comp.Rect)
 	im := new(SippGray)

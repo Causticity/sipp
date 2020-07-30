@@ -65,6 +65,7 @@ func TestComplex(t *testing.T) {
 	SgrayZero = new(SippGray)
 	SgrayZero.Gray = &GrayZero
 
+	// Todo: Check maxmod
 	comp := ToShiftedComplex(Sgray)
 	if !reflect.DeepEqual(shiftedPic, comp.Pix) {
 		t.Error("Shifted complex doesn't match Gray!")

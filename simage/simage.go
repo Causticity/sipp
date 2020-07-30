@@ -27,6 +27,8 @@ type SippImage interface {
 	Pix() []uint8
 	// Val returns the grayscale value at x, y as a float64.
 	Val(x, y int) float64
+	// IntVal returns the grayscale value at x, y as an int32.
+	IntVal(x, y int) int32
 	// Bpp returns the pixel depth of this image, either 8 or 16.
 	Bpp() int
 	// Write encodes the image into a PNG of the given name.
@@ -85,6 +87,11 @@ func (sg *SippGray) Val(x, y int) float64 {
 	return float64(sg.Gray.Pix[sg.PixOffset(x, y)])
 }
 
+// IntVal returns the grayscale value at x, y as an int32
+func (sg *SippGray) IntVal(x, y int) int32 {
+	return int32(sg.Gray.Pix[sg.PixOffset(x, y)])
+}
+
 // Bpp returns the pixel depth of this image, i.e. 8
 func (sg *SippGray) Bpp() int {
 	return 8
@@ -104,6 +111,12 @@ func (sg16 *SippGray16) Pix() []uint8 {
 func (sg16 *SippGray16) Val(x, y int) float64 {
 	i := sg16.PixOffset(x, y)
 	return float64(uint16(sg16.Gray16.Pix[i+0])<<8 | uint16(sg16.Gray16.Pix[i+1]))
+}
+
+// IntVal returns the grayscale value at x, y as an int32.
+func (sg16 *SippGray16) IntVal(x, y int) int32 {
+	i := sg16.PixOffset(x, y)
+	return int32(uint16(sg16.Gray16.Pix[i+0])<<8 | uint16(sg16.Gray16.Pix[i+1]))
 }
 
 // Bpp returns the pixel depth of this image, i.e. 16

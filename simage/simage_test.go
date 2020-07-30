@@ -68,11 +68,14 @@ func TestGraySippImage(t *testing.T) {
 		t.Error("Error: Pix return incorrect for 8-bit image")
 	}
 
-	// Val
+	// Val and IntVal
 	b := gray.Bounds()
 	x := b.Dx() / 2
 	y := b.Dy() / 2
 	val := gray.At(x, y).(color.Gray).Y
+	if int32(val) != gray.IntVal(x, y) {
+		t.Errorf("Error: IntVal failed for gray at pixel %d, %d", x, y)
+	}
 	if float64(val) != gray.Val(x, y) {
 		t.Errorf("Error: Val failed for gray at pixel %d, %d", x, y)
 	}
@@ -130,6 +133,9 @@ func TestGray16SippImage(t *testing.T) {
 	x := b.Dx() / 2
 	y := b.Dy() / 2
 	val := gray16.At(x, y).(color.Gray16).Y
+	if int32(val) != gray16.IntVal(x, y) {
+		t.Errorf("Error: IntVal failed for gray16 at pixel %d, %d", x, y)
+	}
 	if float64(val) != gray16.Val(x, y) {
 		t.Errorf("Error: Val failed for gray16 at pixel %d, %d", x, y)
 	}
