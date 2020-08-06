@@ -139,6 +139,7 @@ func TestFdgrad(t *testing.T) {
 	}
 }
 
+// TODO: Test the extrema
 func TestFdgradInt32(t *testing.T) {
 	var tests = []struct {
 		name string

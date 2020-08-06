@@ -2,7 +2,7 @@
 
 // Package shist provides functions for computing a histogram of values of an
 // image, and for computing and rendering a 2-dimensional histogram of values of
-// a complex gradient image.
+// a complex or ComplexInt32 gradient image.
 package shist
 
 import (
@@ -21,7 +21,7 @@ import (
 type SippHist struct {
 	// A reference to the gradient image we are computing from
 	Grad *ComplexImage
-	// The size of our histogram. It will be 2*radius+1 on a side.
+	// The size of our histogram. It is 2*radius+1 on a side.
 	radius uint16
 	// The histogram data.
 	Bin []uint32
