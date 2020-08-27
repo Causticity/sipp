@@ -20,6 +20,8 @@ type ComplexImage struct {
 	// The maximum modulus value that occurs in this image. This is useful
 	// when computing a histogram of the modulus value.
 	MaxMod float64
+	// Extreme values found in this image
+	MinRe, MaxRe, MinIm, MaxIm float64
 }
 
 // FromComplexArray wraps an array of complex numbers in a ComplexImage.
@@ -27,6 +29,11 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 	dst = new(ComplexImage)
 	dst.Pix = cpx
 	dst.Rect = image.Rect(0, 0, width, len(cpx)/width)
+	dst.MinRe = math.MaxFloat64
+	dst.MinIm = math.MaxFloat64
+	dst.MaxRe = -math.MaxFloat64
+	dst.MaxIm = -math.MaxFloat64
+	dst.MaxMod = 0
 	for _, c := range cpx {
 		re := real(c)
 		im := imag(c)
@@ -34,6 +41,18 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 		// store the maximum squared value, then take the root afterwards
 		if modsq > dst.MaxMod {
 			dst.MaxMod = modsq
+		}
+		if re < dst.MinRe {
+			dst.MinRe = re
+		}
+		if re > dst.MaxRe {
+			dst.MaxRe = re
+		}
+		if im < dst.MinIm {
+			dst.MinIm = im
+		}
+		if im > dst.MaxIm {
+			dst.MaxIm = im
 		}
 	}
 	dst.MaxMod = math.Sqrt(dst.MaxMod)
@@ -47,6 +66,11 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
 	dst = new(ComplexImage)
 	dst.Rect = src.Bounds()
+	dst.MinRe = math.MaxFloat64
+	dst.MinIm = 0
+	dst.MaxRe = -math.MaxFloat64
+	dst.MaxIm = 0
+	dst.MaxMod = 0
 	width := dst.Rect.Dx()
 	height := dst.Rect.Dy()
 	size := width * height
@@ -57,13 +81,19 @@ func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
 	i := 0
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			val := src.Val(x, y)
-			dst.Pix[i] = complex(val*shift, 0)
+			val := src.Val(x, y) * shift
+			dst.Pix[i] = complex(val, 0)
 			i++
 			shift = -shift
 			modsq := val*val
 			if modsq > dst.MaxMod {
 				dst.MaxMod = modsq
+			}
+			if val < dst.MinRe {
+				dst.MinRe = val
+			}
+			if val > dst.MaxRe {
+				dst.MaxRe = val
 			}
 		}
 		shiftStart = -shiftStart
@@ -77,33 +107,12 @@ func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
 // Render renders the real and imaginary parts of the image as separate 8-bit
 // grayscale images.
 func (comp *ComplexImage) Render() (SippImage, SippImage) {
-	// compute max excursions of the real and imag parts
-	var minreal float64 = math.MaxFloat64
-	var minimag float64 = math.MaxFloat64
-	var maxreal float64 = -math.MaxFloat64
-	var maximag float64 = -math.MaxFloat64
-	for _, pix := range comp.Pix {
-		reVal := real(pix)
-		imVal := imag(pix)
-		if reVal < minreal {
-			minreal = reVal
-		}
-		if reVal > maxreal {
-			maxreal = reVal
-		}
-		if imVal < minimag {
-			minimag = imVal
-		}
-		if imVal > maximag {
-			maximag = imVal
-		}
-	}
 	// compute scale and offset for each image
-	rdiv := maxreal - minreal
+	rdiv := comp.MaxRe - comp.MinRe
 	if rdiv < 1.0 {
 		rdiv = 1.0
 	}
-	idiv := maximag - minimag
+	idiv := comp.MaxIm - comp.MinIm
 	if idiv < 1.0 {
 		idiv = 1.0
 	}
@@ -119,8 +128,8 @@ func (comp *ComplexImage) Render() (SippImage, SippImage) {
 	for index, pix := range comp.Pix {
 		r := real(pix)
 		i := imag(pix)
-		rePix[index] = uint8((r - minreal) * rscale)
-		imPix[index] = uint8((i - minimag) * iscale)
+		rePix[index] = uint8((r - comp.MinRe) * rscale)
+		imPix[index] = uint8((i - comp.MinIm) * iscale)
 	}
 	return re, im
 }
