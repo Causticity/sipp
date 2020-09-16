@@ -25,6 +25,10 @@ var smallPicGrad = []complex128{
 }
 
 var smallPicGradMaxMod = math.Sqrt(34.0)
+var smallPicMaxRe int32 = 5
+var smallPicMinRe int32 = 5
+var smallPicMaxIm int32 = -3
+var smallPicMinIm int32 = -3
 
 var identityKernel = SippGradKernel{
 	{1 + 0i, 0 + 0i},
@@ -102,6 +106,7 @@ func TestFdgrad(t *testing.T) {
 		h	 int
 		gr   *[]complex128
 		mm   float64
+		mxr, mnr, mxi, mni float64
 	} {
 		{
 			"Default kernel Sgray",
@@ -110,6 +115,10 @@ func TestFdgrad(t *testing.T) {
 			3,
 			&smallPicGrad,
 			smallPicGradMaxMod,
+			float64(smallPicMaxRe),
+			float64(smallPicMinRe),
+			float64(smallPicMaxIm),
+			float64(smallPicMinIm),
 		},
 		{
 			"Default kernel SgrayCosxCosyTiny",
@@ -118,7 +127,10 @@ func TestFdgrad(t *testing.T) {
 			19,
 			&CosxCosyTinyGrad,
 			CosxCosyTinyGradMaxMod,
-		},
+			CosxCosyTinyGradMaxRe,
+			CosxCoxyTinyGradMinRe,
+			CosxCosyTinyGradMaxIm,
+			CosxCosyTinyGradMinIm,		},
 	}
 	for _, test := range tests {
 		grad := Fdgrad(test.im)
@@ -136,6 +148,22 @@ func TestFdgrad(t *testing.T) {
 			t.Errorf("Error in test %s: Incorrect max modulus. Expected: %f, got %f",
 				test.name, test.mm, grad.MaxMod)
 		}
+		if grad.MaxRe != test.mxr {
+			t.Errorf("Error in test %s: Incorrect max real. Expected: %f, got %f",
+				test.name, test.mxr, grad.MaxRe)
+		}
+		if grad.MinRe != test.mnr {
+			t.Errorf("Error in test %s: Incorrect min real. Expected: %f, got %f",
+				test.name, test.mnr, grad.MinRe)
+		}
+		if grad.MaxIm != test.mxi {
+			t.Errorf("Error in test %s: Incorrect max imaginary. Expected: %f, got %f",
+				test.name, test.mxi, grad.MaxIm)
+		}
+		if grad.MinIm != test.mni {
+			t.Errorf("Error in test %s: Incorrect min imaginary. Expected: %f, got %f",
+				test.name, test.mni, grad.MinIm)
+		}
 	}
 }
 
@@ -147,6 +175,8 @@ func TestFdgradInt32(t *testing.T) {
 		w	 int
 		h	 int
 		gr   *[]ComplexInt32
+		mm   float64
+		mxr, mnr, mxi, mni int32
 	} {
 		{
 			"Default kernel Sgray",
@@ -154,6 +184,11 @@ func TestFdgradInt32(t *testing.T) {
 			3,
 			3,
 			&smallPicGradInt32,
+			smallPicGradMaxMod,
+			smallPicMaxRe,
+			smallPicMinRe,
+			smallPicMaxIm,
+			smallPicMinIm,
 		},
 		{
 			"Default kernel SgrayCosxCosyTiny",
@@ -161,6 +196,11 @@ func TestFdgradInt32(t *testing.T) {
 			19,
 			19,
 			&CosxCosyTinyGradInt32,
+			CosxCosyTinyGradMaxMod,
+			int32(CosxCosyTinyGradMaxRe),
+			int32(CosxCoxyTinyGradMinRe),
+			int32(CosxCosyTinyGradMaxIm),
+			int32(CosxCosyTinyGradMinIm),
 		},
 	}
 	for _, test := range tests {
@@ -174,6 +214,26 @@ func TestFdgradInt32(t *testing.T) {
 			t.Error("Error in test ", test.name, ": Gradient image incorrect. Expected:" +
 				ComplexInt32ArrayToString(*test.gr, test.w) + "Got:" +
 				ComplexInt32ArrayToString(grad.Pix, test.w))
+		}
+		if grad.MaxMod != test.mm {
+			t.Errorf("Error in test %s: Incorrect max modulus. Expected: %f, got %f",
+				test.name, test.mm, grad.MaxMod)
+		}
+		if grad.MaxRe != test.mxr {
+			t.Errorf("Error in test %s: Incorrect max real. Expected: %d, got %d",
+				test.name, test.mxr, grad.MaxRe)
+		}
+		if grad.MinRe != test.mnr {
+			t.Errorf("Error in test %s: Incorrect min real. Expected: %d, got %d",
+				test.name, test.mnr, grad.MinRe)
+		}
+		if grad.MaxIm != test.mxi {
+			t.Errorf("Error in test %s: Incorrect max imaginary. Expected: %d, got %d",
+				test.name, test.mxi, grad.MaxIm)
+		}
+		if grad.MinIm != test.mni {
+			t.Errorf("Error in test %s: Incorrect min imaginary. Expected: %d, got %d",
+				test.name, test.mni, grad.MinIm)
 		}
 	}
 }

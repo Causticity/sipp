@@ -26,6 +26,7 @@ var shiftedPicInt32 = []ComplexInt32{
 
 var shiftedPicInt32MinRe int32 = -15
 var shiftedPicInt32MaxRe int32 = 16
+var shiftedPicInt32MaxMod float64 = 16.0
 
 var CosxCosyTinyGradInt32 = []ComplexInt32 {
 {-23,0}, {-32,-12}, {-37,-22}, {-40,-31}, {-38,-37}, {-31,-39}, {-23,-38}, {-12,-32}, {0,-24}, {13,-13}, {24,0}, {32,12}, {37,23}, {39,32}, {37,37}, {31,39}, {23,38}, {12,32}, {0,23},
@@ -80,6 +81,10 @@ func TestFromComplexInt32(t *testing.T) {
 		t.Errorf("Error: Incorrect maximum imaginary value. Expected: %v, got %v",
 			CosxCosyTinyGradInt32MaxIm, cpx.MaxIm)
 	}
+	if cpx.MaxMod != CosxCosyTinyGradMaxMod {
+		t.Errorf("Error: Incorrect max modulus. Expected: %v, got %v",
+			CosxCosyTinyGradMaxMod, cpx.MaxMod)
+	}
 }
 
 func TestComplexInt32Image(t *testing.T) {
@@ -97,6 +102,10 @@ func TestComplexInt32Image(t *testing.T) {
 	if comp.MaxRe != shiftedPicInt32MaxRe {
 		t.Errorf("Shifted complexInt32 MaxRe incorrect. Expected: %v, got %v",
 			shiftedPicInt32MaxRe, comp.MaxRe)
+	}
+	if comp.MaxMod != shiftedPicInt32MaxMod {
+		t.Errorf("Shifted complexInt32 MaxMod incorrect. Expected: %v, got %v",
+			shiftedPicInt32MaxMod, comp.MaxMod)
 	}
 
 	comp = ToShiftedComplexInt32(Sgray16)

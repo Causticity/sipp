@@ -74,6 +74,10 @@ var CosxCosyTinyGrad = []complex128 {
 }
 
 var CosxCosyTinyGradMaxMod = 56.568542494923804
+var CosxCosyTinyGradMaxRe float64 = 40
+var CosxCoxyTinyGradMinRe float64 = -40
+var CosxCosyTinyGradMaxIm float64 = 39
+var CosxCosyTinyGradMinIm float64 = -40
 
 func ComplexArrayToString(cpx []complex128, width int) string {
     res := "\n"

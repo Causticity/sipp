@@ -17,6 +17,10 @@ type ComplexInt32Image struct {
 	Pix []ComplexInt32
 	// The rectangle defining the bounds of the image.
 	Rect image.Rectangle
+	// The maximum modulus value that occurs in this image. This is useful
+	// when computing a histogram of the modulus value. We retain a float64 for
+	// precision.
+	MaxMod float64
 	// Extreme values found in this image
 	MinRe, MaxRe, MinIm, MaxIm int32
 }
@@ -30,9 +34,15 @@ func FromComplexInt32Array(cpx []ComplexInt32, width int) (dst *ComplexInt32Imag
 	dst.MinIm = math.MaxInt32
 	dst.MaxRe = -math.MaxInt32
 	dst.MaxIm = -math.MaxInt32
+	dst.MaxMod = 0.0
 	for _, c := range cpx {
 		reVal := c.Re
 		imVal := c.Im
+		modsq := float64(reVal*reVal) + float64(imVal*imVal)
+		// store the maximum squared value, then take the root afterwards
+		if modsq > dst.MaxMod {
+			dst.MaxMod = modsq
+		}
 		if reVal < dst.MinRe {
 			dst.MinRe = reVal
 		}
@@ -46,6 +56,7 @@ func FromComplexInt32Array(cpx []ComplexInt32, width int) (dst *ComplexInt32Imag
 			dst.MaxIm = imVal
 		}
 	}
+	dst.MaxMod = math.Sqrt(dst.MaxMod)
 	return
 }
 
@@ -63,6 +74,7 @@ func ToShiftedComplexInt32(src SippImage) (dst *ComplexInt32Image) {
 	dst.MinIm = 0
 	dst.MaxRe = math.MinInt32
 	dst.MaxIm = 0
+	dst.MaxMod = 0.0
 	// Multiply by (-1)^(x+y) while converting the pixels to complex numbers
 	var shiftStart int32 = 1
 	shift := shiftStart
@@ -72,6 +84,10 @@ func ToShiftedComplexInt32(src SippImage) (dst *ComplexInt32Image) {
 			val := src.IntVal(x, y)*shift
 			dst.Pix[i] = ComplexInt32{val, 0}
 			shift = -shift
+			modsq := float64(val*val)
+			if modsq > dst.MaxMod {
+				dst.MaxMod = modsq
+			}
 			if val < dst.MinRe {
 				dst.MinRe = val
 			}
@@ -83,6 +99,7 @@ func ToShiftedComplexInt32(src SippImage) (dst *ComplexInt32Image) {
 		shiftStart = -shiftStart
 		shift = shiftStart
 	}
+	dst.MaxMod = math.Sqrt(dst.MaxMod)
 
 	return
 }

@@ -33,7 +33,7 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 	dst.MinIm = math.MaxFloat64
 	dst.MaxRe = -math.MaxFloat64
 	dst.MaxIm = -math.MaxFloat64
-	dst.MaxMod = 0
+	dst.MaxMod = 0.0
 	for _, c := range cpx {
 		re := real(c)
 		im := imag(c)
@@ -70,7 +70,7 @@ func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
 	dst.MinIm = 0
 	dst.MaxRe = -math.MaxFloat64
 	dst.MaxIm = 0
-	dst.MaxMod = 0
+	dst.MaxMod = 0.0
 	width := dst.Rect.Dx()
 	height := dst.Rect.Dy()
 	size := width * height

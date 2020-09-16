@@ -67,6 +67,11 @@ func FdgradKernel(src SippImage, kern SippGradKernel) (grad *ComplexImage) {
 	grad = new(ComplexImage)
 	grad.Rect = image.Rect(0, 0, srect.Dx()-1, srect.Dy()-1)
 	grad.Pix = make([]complex128, grad.Rect.Dx()*grad.Rect.Dy())
+	grad.MinRe = math.MaxFloat64
+	grad.MinIm = math.MaxFloat64
+	grad.MaxRe = -math.MaxFloat64
+	grad.MaxIm = -math.MaxFloat64
+	grad.MaxMod = 0.0
 
 	dsti := 0
 	for y := 0; y < grad.Rect.Dy(); y++ {
@@ -75,7 +80,21 @@ func FdgradKernel(src SippImage, kern SippGradKernel) (grad *ComplexImage) {
 				src.Val(x+1, y), src.Val(x, y+1), src.Val(x+1, y+1))
 			grad.Pix[dsti] = val
 			dsti++
-			modsq := real(val)*real(val) + imag(val)*imag(val)
+			re := real(val)
+			im := imag(val)
+			modsq := re*re + im*im
+			if re < grad.MinRe {
+				grad.MinRe = re
+			}
+			if re > grad.MaxRe {
+				grad.MaxRe = re
+			}
+			if im < grad.MinIm {
+				grad.MinIm = im
+			}
+			if im > grad.MaxIm {
+				grad.MaxIm = im
+			}
 			// store the maximum squared value, then take the root afterwards
 			if modsq > grad.MaxMod {
 				grad.MaxMod = modsq
@@ -103,6 +122,7 @@ func FdgradInt32Kernel(src SippImage,
 	grad.MaxRe = math.MinInt32
 	grad.MinIm = math.MaxInt32
 	grad.MaxIm = math.MinInt32
+	grad.MaxMod = 0.0
 
 	dsti := 0
 	for y := 0; y < grad.Rect.Dy(); y++ {
@@ -111,6 +131,11 @@ func FdgradInt32Kernel(src SippImage,
 				src.IntVal(x+1, y), src.IntVal(x, y+1), src.IntVal(x+1, y+1))
 			grad.Pix[dsti] = val
 			dsti++
+			modsq := float64(val.Re*val.Re) + float64(val.Im*val.Im)
+			// store the maximum squared value, then take the root afterwards
+			if modsq > grad.MaxMod {
+				grad.MaxMod = modsq
+			}
 			if val.Re < grad.MinRe {
 				grad.MinRe = val.Re
 			}
@@ -125,6 +150,7 @@ func FdgradInt32Kernel(src SippImage,
 			}
 		}
 	}
+	grad.MaxMod = math.Sqrt(grad.MaxMod)
 
 	return
 }

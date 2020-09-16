@@ -25,6 +25,7 @@ var shiftedPic = []complex128{
 
 var minShiftedPic = -15.0
 var maxShiftedPic = 16.0
+var maxShiftedMod = 16.0
 
 var scaledShiftedPic = []uint8{
 	131, 106, 148, 90,
@@ -68,7 +69,6 @@ func TestComplex(t *testing.T) {
 	SgrayZero = new(SippGray)
 	SgrayZero.Gray = &GrayZero
 
-	// Todo: Check maxmod
 	comp := ToShiftedComplex(Sgray)
 	if !reflect.DeepEqual(shiftedPic, comp.Pix) {
 		t.Error("Shifted complex real part doesn't match Gray!")
@@ -78,6 +78,10 @@ func TestComplex(t *testing.T) {
 	}
 	if comp.MaxRe != maxShiftedPic {
 		t.Errorf("Shifted complex max unexpected: expected %v, got %v", maxShiftedPic, comp.MaxRe)
+	}
+	if comp.MaxMod != maxShiftedMod {
+		t.Errorf("Shifted complex max modulus unexpected: expected %v, got %v",
+			maxShiftedMod, comp.MaxMod)
 	}
 
 	comp = ToShiftedComplex(Sgray16)
