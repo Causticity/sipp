@@ -126,7 +126,6 @@ func TestConventionalEntropy(t *testing.T) {
 type entropyTest struct {
 	name                    string
 	grad                    []complex128
-	radius                  uint16
 	stride                  int
 	maxDelentropy           float64
 	delentropyArray         []float64
@@ -138,9 +137,8 @@ type entropyTest struct {
 func TestDelentropy(t *testing.T) {
 	var tests = []entropyTest{
 		{
-			"CosxCosyTinyGrad RADIUS = 0",
+			"CosxCosyTinyGrad",
 			CosxCosyTinyGrad,
-			0,
 			CosxCosyTinyStride,
 			expectedMaxDelentropy,
 			expectedDelentropyArray,
@@ -148,20 +146,9 @@ func TestDelentropy(t *testing.T) {
 			"cosxcosy_tiny_hist_delent.png",
 			sgrayCosxCosyTinyDelentropy,
 		},
-		{
-			"CosxCosyTinyGrad RADIUS = 255",
-			CosxCosyTinyGrad,
-			255,
-			CosxCosyTinyStride,
-			expectedMaxDelentropy,
-			expectedDelentropyArray,
-			expectedDelentropy,
-			"cosxcosy_tiny_radius255_hist_delent.png",
-			sgrayCosxCosyTinyDelentropy,
-		},
 	}
 	for _, test := range tests {
-		hist := Hist(FromComplexArray(test.grad, test.stride-1), test.radius)
+		hist := Hist(FromComplexArray(test.grad, test.stride-1))
 		dent := Delentropy(hist)
 		if dent.hist != hist {
 			t.Errorf("Error: SippDelentropy for %s has incorrect hist, expected %v, got %v",
@@ -180,13 +167,16 @@ func TestDelentropy(t *testing.T) {
 				test.name, test.delentropy, dent.Delentropy)
 		}
 		histDentImage := dent.HistDelentropyImage()
-		check, err := Read(filepath.Join(TestDir, test.histDelentropyImageName))
+		checkName := filepath.Join(TestDir, test.histDelentropyImageName)
+		check, err := Read(checkName)
 		if err != nil {
 			t.Errorf("Error reading histogram delentropy check image: %v\n", test.histDelentropyImageName)
 		}
 		if !reflect.DeepEqual(histDentImage.Pix(), check.Pix()) {
-			t.Errorf("Error: histogram delentropy image incorrect. Expected %v, got%v\n",
-				check.Pix(), histDentImage.Pix())
+			// Write out the check image and report names of mismatched files
+			name := SaveFailedSimage(checkName, histDentImage)
+			t.Errorf("Error: histogram delentropy image does not match expected.\nExpected in file " +
+				checkName + "\nFailed saved in file " + name)
 		}
 		delentImage := dent.DelEntropyImage()
 		if !reflect.DeepEqual(delentImage.Pix(), test.delentropyImage.Pix()) {

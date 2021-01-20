@@ -1,5 +1,7 @@
 // Copyright Raul Vera 2015-2016
 
+// Package sentropy provides functions for computing entropy and delentropy
+// of SippImages, as well as rendering these as images.
 package sentropy
 
 import (
@@ -123,9 +125,9 @@ func Delentropy(hist *SippHist) (dent *SippDelentropy) {
 // histogram bin.
 func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 	// Make a greyscale image of the entropy for each bin.
-	stride := dent.hist.Side()
+	width, height := dent.hist.Size()
 	dentGray := new(SippGray)
-	dentGray.Gray = image.NewGray(image.Rect(0, 0, stride, stride))
+	dentGray.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
 	dentGrayPix := dentGray.Pix()
 	// scale the delentropy from (0-hist.maxBinDelentropy) to (0-255)
 	scale := 255.0 / dent.maxBinDelentropy

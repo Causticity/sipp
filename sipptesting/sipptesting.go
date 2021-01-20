@@ -8,6 +8,9 @@
 package sipptesting
 
 import (
+	"path/filepath"
+	"strings"
+
 	. "github.com/Causticity/sipp/simage"
 	"github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
@@ -23,4 +26,17 @@ func init() {
 	Sgray16.Gray16 = &sipptestcore.Gray16
 	SgrayCosxCosyTiny = new(SippGray)
 	SgrayCosxCosyTiny.Gray = &sipptestcore.CosxCosyTiny
+}
+
+func SaveFailedSimage(expFileName string, simg SippImage) (name string) {
+	// Compose a new name from the expected file name, with "FAILED" added to
+	// the base name.
+	ext := filepath.Ext(expFileName)
+	name = strings.TrimSuffix(expFileName, ext) + "_FAILED" + ext
+	// Write the failed image out with that name, overwriting any existing one.
+	err := simg.Write(&name)
+	if err != nil {
+		panic("Error writing failed image file");
+	}
+	return
 }

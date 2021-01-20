@@ -47,14 +47,6 @@ func main() {
 	var fls = flag.Bool("fls", false, "Boolean; if true, write the fft"+
 		" log spectrum image")
 	var a = flag.Bool("a", false, "Boolean; if true, write all the images")
-	var radius = flag.Uint("r", 0, "Number of bins to scale the max radius to. "+
-		"The histogram will be 2r+1 bins on a side.\n"+
-		"        This is used only for 16-bit images.\n"+
-		"        If r is omitted, it is computed from "+
-		"the maximum excursion of the gradient.\n")
-	var rf8 = flag.Bool("rf8", false, "Boolean; if true, force 8-bit images "+
-		" to use a 511x511 histogram, "+
-		"as that covers the entire possible space.")
 	var v = flag.Bool("v", false, "Boolean; if true, verbosely report "+
 		"everything done")
 	var csv = flag.Bool("csv", false, "Boolean: if true, write the name of the"+
@@ -101,13 +93,6 @@ func main() {
 		}
 	}
 
-	if src.Bpp() == 8 && *rf8 {
-		*radius = 255
-		if *v {
-			fmt.Println("Rdius forced to 255 for 8-bit image.")
-		}
-	}
-
 	grad := sgrad.Fdgrad(src)
 	if *v {
 		fmt.Println("gradient image computed")
@@ -129,7 +114,7 @@ func main() {
 		}
 	}
 
-	hist := shist.Hist(grad, uint16(*radius))
+	hist := shist.Hist(grad)
 
 	if *hst {
 		rhist := hist.Render()
