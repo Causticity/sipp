@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"math/bits"
 )
 
 import (
@@ -53,8 +54,6 @@ func GreyHist(im SippImage) (hist []uint32) {
 		is16 = true
 	}
 
-	//fmt.Println("GreyHist histogram size is ", histSize)
-
 	hist = make([]uint32, histSize)
 	imPix := im.Pix()
 	for y := 0; y < im.Bounds().Dy(); y++ {
@@ -70,22 +69,49 @@ func GreyHist(im SippImage) (hist []uint32) {
 	return
 }
 
-type sparseHistogramEntry struct {
-	// The coordinates in histogram space for this bin
-	x, y uint32
-	// The bin value, i.e. the number of pixels with this gradient value
-	binVal uint32
-}
-
-// number of uint32s per bin for each of the flat or sparse versions
-const sparseHistogramEntrySize = 3
+// sparseHistogramEntrySize is the number of uint32s per histogram entry.
+// The size in bytes (or uint32s) of a Go map is not easy to determine, but the
+// number of buckets is always a power of 2, so as a rough estimate, we'll take
+// the minimum size of an entry to be the size of the complex128 index (4 uint32s)
+// plus the count (1 uint32) plus a 64-bit pointer for overhead (2 uint32s). The
+// last of these is just a wild guess. Then we multiply this entry size by the
+// number of pixels rounded up to the next power of 2 to get an estimate of the
+// sparse histogram size.
+const sparseHistogramEntrySize = 4 + 1 + 2 // See above
 const flatBinSize = 1
+
+// Return the next power of 2 higher than the input, or panic if the input is 0,
+// 1, or would overflow, as none of these should ever occur.
+func upToNextPowerOf2(n uint32) uint32 {
+	// An input of 0 or 1 is invalid, but should never be sent in, so panic.
+	if n == 0 || n == 1 {
+		panic(1)
+	}
+	// Next check if the input already is a power of 2.
+	if bits.OnesCount32(n) == 1 {
+		return n
+	}
+	// Now check that the highest bit isn't already set, because if it is then
+	// we would overflow. This means we have more than 2 billion pixels, which
+	// would be problematic for plenty of other reasons, so here we assume that
+	// this is an error in the caller and just panic.
+	lz := bits.LeadingZeros32(n)
+	if lz == 0 {
+		panic(1)
+	}
+	// Otherwise return a number with a single bit set one position higher than
+	// the highest input bit set.
+	return 1 << (32 - lz)
+}
 
 // All images with excursions <= this will use the flat version, in order to
 // avoid the computational overhead of sparse histograms for 8-bit and
 // low-excursion 16-bit images, even though the sparse histogram would usually
-// be smaller.
-const minSparseExcursion = 256
+// be smaller. Note that excursion, the distance from 0 along either axis of the
+// complex plane, is always positive.
+// Later, this will be used to scale down sparse histograms for rendering, so
+// that histogram renderings will never be more that double this value on a side.
+const minSparseExcursion = 1024
 
 // Hist computes the 2D histogram from the given gradient image.
 func Hist(grad *ComplexImage) (hist *SippHist) {
@@ -101,31 +127,40 @@ func Hist(grad *ComplexImage) (hist *SippHist) {
 	maxImagExcursion := uint32(math.Max(math.Abs(grad.MaxIm), math.Abs(grad.MinIm)))
 	maxExcursion := uint32(math.Max(float64(maxRealExcursion), float64(maxImagExcursion)))
 
-	width := maxRealExcursion * 2 + 1 // Ensure both are odd
-	height := maxImagExcursion * 2 + 1
-	flatHistSize := width * height * flatBinSize
+	hist.width = maxRealExcursion * 2 + 1 // Ensure both are odd
+	hist.height = maxImagExcursion * 2 + 1
+	flatHistSize := hist.width * hist.height * flatBinSize
 
-	nPix := len(grad.Pix)
+	nPix := uint32(len(grad.Pix))
 
 	// Compute the size of the regular histogram and the maximum size of a sparse
 	// histogram and use the smaller version
 
 	// The maximum size of a sparse histogram is one sparseHistogramEntry per
-	// gradient pixel. The size is the number of uint32s.
-	maxSparseSize := uint32(sparseHistogramEntrySize * nPix)
+	// gradient pixel, but Go maps always have a power of 2 number of entries.
+	// See the comment for sparseHistogramEntrySize above.
+	numMapEntries := upToNextPowerOf2(nPix)
+	maxSparseSize := uint32(sparseHistogramEntrySize * numMapEntries)
 
 	//fmt.Println("flat histogram width, height: ", width, height)
 	//fmt.Println("maxSparseSize:", maxSparseSize, ", flatHistSize:", flatHistSize)
 	if maxExcursion > minSparseExcursion && maxSparseSize < flatHistSize {
 		// Use a sparse histogram
-		fmt.Println("Would use sparse histogram, but unimplemented")
-		panic(1)
+		fmt.Println("Using sparse histogram")
+		// TODO: No other code uses this yet.
+		// A sparse histogram is a map of actually occurring values.
+		sparse := make(map[complex128]uint32)
+		for _, pixel := range grad.Pix {
+			v := sparse[pixel]
+			v++ // v is 0 for the empty initial case, so this always works
+			sparse[pixel] = v
+			if v > hist.Max {
+				hist.Max = v
+			}
+		}
 	} else {
 		// Use a flat histogram
-		//fmt.Println("Using flat histogram")
-
-		hist.width = width
-		hist.height = height
+		fmt.Println("Using flat histogram")
 
 		histDataSize := int(hist.width) * int(hist.height) // Always odd
 		hist.Bin = make([]uint32, histDataSize)
