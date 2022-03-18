@@ -1,7 +1,7 @@
 if go test -coverprofile coverage.out ./simage ./scomplex ./sgrad ./shist ./sfft ./sentropy
 then
     echo tests passed
-    if go install github.com/Causticity/sipp/sipp
+    if go install -buildvcs=false github.com/Causticity/sipp/sipp
     then
         echo sipp built ok
     else
