@@ -117,7 +117,7 @@ func main() {
 	hist := shist.Hist(grad)
 
 	if *hst {
-		rhist := hist.Render()
+		rhist := hist.Render(true)
 		histName := *out + "_hist.png"
 		err = rhist.Write(&histName)
 		if err != nil {

@@ -1,4 +1,4 @@
-// Copyright Raul Vera 2015-2016
+// Copyright Raul Vera
 
 package scomplex
 

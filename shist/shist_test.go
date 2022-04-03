@@ -6,18 +6,47 @@ package shist
 
 import (
 	_ "image/png"
+	"math"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"fmt"
 )
 
 import (
 	. "github.com/Causticity/sipp/scomplex"
-	//. "github.com/Causticity/sipp/sgrad"
 	. "github.com/Causticity/sipp/simage"
 	. "github.com/Causticity/sipp/sipptesting"
 	. "github.com/Causticity/sipp/sipptesting/sipptestcore"
 )
+
+// First test the 1D histogram
+
+// 0th entry is 0, then next 16 entries should have a 1, all others 0
+func checkHist(t *testing.T, hist []uint32) {
+	for i, val := range hist {
+		var check uint32
+		if i > 0 && i < 17 {
+			check = 1
+		} else {
+			check = 0
+		}
+		if val != check {
+			t.Errorf("Error: histogram at index %v incorrect, expected %v, got %v",
+				i, check, val)
+		}
+	}
+}
+
+func TestGreyHist(t *testing.T) {
+	hist := GreyHist(Sgray)
+	checkHist(t, hist)
+	hist = GreyHist(Sgray16)
+	checkHist(t, hist)
+}
+
+// Next test the two 2D histograms.
+
 var cosxCosyTinyBinIndex = []int{
 	3257, 2276, 1461, 729, 245, 90, 179, 676, 1336, 2240, 3304, 4284, 5180,
 	5911, 6314, 6470, 6381, 5884, 5143, 4220, 3243, 2269, 1380, 657, 260, 108,
@@ -74,97 +103,274 @@ var cosxCosyTinyBinVals = []uint32{
 	4, 2, 6, 2, 2, 2, 4, 4, 2, 1, 2, 2, 4, 2, 6, 2, 2, 6, 6,
 }
 
+var cosxCosyTinyBins = []BinPair{
+	{1, 12}, {2, 78}, {6, 18}, {8, 1}, {4, 13}, {5, 5},
+}
+
+var cosxCosyTinyHistWidth = CosxCosyTinyMaxReExc*2+1
+var cosxCosyTinyHistHeight = CosxCosyTinyMaxImExc*2+1
+
 var expectedMax uint32 = 8
 
-// 0th entry is 0, then next 16 entries should have a 1, all others 0
-func checkHist(t *testing.T, hist []uint32) {
-	for i, val := range hist {
-		var check uint32
-		if i > 0 && i < 17 {
-			check = 1
-		} else {
-			check = 0
+func TestHistCore(t *testing.T) {
+	type coreHistTest struct {
+		name                  string
+		grad                  []complex128
+		stride                int
+		maxExcursion		  int
+		width				  int
+		height				  int
+	}
+
+	var coreTests = []coreHistTest {
+		{
+			"CosxCosyTinyGrad",
+			CosxCosyTinyGrad,
+			CosxCosyTinyStride,
+			CosxCosyTinyMaxExcursion,
+			cosxCosyTinyHistWidth,
+			cosxCosyTinyHistHeight,
+		},
+	}
+
+	for _, test := range coreTests {
+		grad := FromComplexArray(test.grad, test.stride-1)
+		maxEx, width, height := computeHistSize(grad)
+		if maxEx != test.maxExcursion {
+			t.Errorf("Error: core test for %s has incorrect max excursion, expected %v, got %v",
+				test.name, test.maxExcursion, maxEx)
 		}
-		if val != check {
-			t.Errorf("Error: histogram at index %v incorrect, expected %v, got %v",
-				i, check, val)
+		if width != test.width {
+			t.Errorf("Error: core test for %s has incorrect width, expected %v, got %v",
+				test.name, test.width, width)
+		}
+		if height != test.height {
+			t.Errorf("Error: core test for %s has incorrect height, expected %v, got %v",
+				test.name, test.height, height)
+		}
+	}
+
+	type supScaleTest struct {
+		x, y, cx, cy int
+		md float64
+		exp float64
+	}
+
+	// TODO: These could probably be improved
+	var supScaleTests = []supScaleTest {
+		{
+			10,0,0,0,100,0.1,
+		},
+		{
+			0,10,0,0,100,0.1,
+		},
+		{
+			10,10,0,0,100,0.1414,
+		},
+		{
+			-10,-10,0,0,100,0.1414,
+		},
+		{
+			20,20,10,10,100,0.1414,
+		},
+	}
+	const epsilon = 0.0001
+	for _, test := range supScaleTests {
+		scale := supScale(test.x, test.y, test.cx, test.cy, test.md)
+		if math.Abs(test.exp - scale) > epsilon {
+			t.Errorf("Error: supscale incorrect, expected %f, got %f", test.exp, scale)
 		}
 	}
 }
 
-func TestGreyHist(t *testing.T) {
-	hist := GreyHist(Sgray)
-	checkHist(t, hist)
-	hist = GreyHist(Sgray16)
-	checkHist(t, hist)
+type binIndexTest struct {
+	x, y int // grad pixel coords and the expected histogram value
+	binval uint32
 }
 
-type histTest struct {
-	name                  string
-	grad                  []complex128
-	stride                int
-	maxMod                float64
-	count                 int
-	binIndex              []int
-	binVals               []uint32
-	maxBinVal             uint32
-	suppressedImageName   string
-	renderedHistogramName string
-}
+func TestFlatHist(t *testing.T) {
 
-func TestHist(t *testing.T) {
-	var tests = []histTest{
+	type flatHistTest struct {
+		name                  		string
+		grad                  		[]complex128
+		width				  		int
+		height				  		int
+		stride                		int
+		maxMod                		float64
+		count                 		int
+		binIndex              		[]int
+		binVals               		[]uint32
+		bins				  		[]BinPair
+		maxBinVal             		uint32
+		binTests			  		[]binIndexTest
+		suppressedImageName   		string
+		renderedHistogramName 		string
+		renderedScaledHistogramName	string
+	}
+
+	var flatTests = []flatHistTest {
 		{
 			"CosxCosyTinyGrad",
 			CosxCosyTinyGrad,
+			cosxCosyTinyHistWidth,
+			cosxCosyTinyHistHeight,
 			CosxCosyTinyStride,
 			CosxCosyTinyGradMaxMod,
 			expectedCosxCosyTinyNonZeroHistCount,
 			cosxCosyTinyBinIndex,
 			cosxCosyTinyBinVals,
+			cosxCosyTinyBins,
 			expectedMax,
+			[]binIndexTest {
+				{ 9, 0, 1},
+				{ 11, 3, 4},
+				{ 1, 17, 8},
+			},
 			"cosxcosy_tiny_hist_sup.png",
 			"cosxcosy_tiny_hist.png",
+			"cosxcosy_tiny_hist_scaled.png",
 		},
-		// TODO 16-bit tests, once 16-bit has been truly sorted out.
 	}
-	for _, test := range tests {
+
+	for _, test := range flatTests {
+		// Test core API
 		grad := FromComplexArray(test.grad, test.stride-1)
-		hist := Hist(grad)
-		if hist.Grad != grad {
+		hist := Hist(grad).(*flatSippHist)
+		if hist.Grad() != grad {
 			t.Errorf("Error: SippHist for %s has incorrect grad, expected %v, got %v",
-				test.name, grad, hist.Grad)
+				test.name, grad, hist.Grad())
+		}
+		width, height := hist.Size()
+		if width != test.width {
+			t.Errorf("Error:SippHist for %s has incorrect width, expected %v, got %v",
+				test.name, test.width, width)
+		}
+		if height != test.height {
+			t.Errorf("Error:SippHist for %s has incorrect height, expected %v, got %v",
+				test.name, test.height, height)
 		}
 		count := 0
-		for _, val := range hist.Bin {
+		for _, val := range hist.bin {
 			if val != 0 {
 				count++
 			}
 		}
+		if hist.Max() != test.maxBinVal {
+			t.Errorf("Error: hist.Max for %s incorrect. Expected %v, got %v",
+				test.name, test.maxBinVal, hist.Max())
+		}
+		// Check internal variables
 		xpctCnt := test.count
 		if count != xpctCnt {
 			t.Errorf("Error: Histogram for %s has incorrect number of non-zero entries: expected %v, got %v",
 				test.name, xpctCnt, count)
 		}
-		if !reflect.DeepEqual(hist.BinIndex, test.binIndex) {
+
+		if !reflect.DeepEqual(hist.binIndex, test.binIndex) {
 			t.Errorf("Error: hist.binIndex for %s incorrect, expected\n%v\n got\n%v\n",
-				test.name, test.binIndex, hist.BinIndex)
+				test.name, test.binIndex, hist.binIndex)
 		}
-		for i, val := range hist.BinIndex {
-			if hist.Bin[val] != test.binVals[i] {
+		for i, val := range hist.binIndex {
+			if hist.bin[val] != test.binVals[i] {
 				t.Errorf("Error: histogram value for %s incorrect, expected %v, got %v",
-					test.name, test.binVals[i], hist.Bin[val])
+					test.name, test.binVals[i], hist.bin[val])
 			}
 		}
-		if hist.Max != test.maxBinVal {
-			t.Errorf("Error: hist.Max for %s incorrect. Expected %v, got %v",
-				test.name, test.maxBinVal, hist.Max)
+
+		numPix := uint32(len(hist.Grad().Pix))
+		fmt.Printf("There are %d pixels\n", numPix)
+
+		///////////////// Temp test against old code
+		binDelentropy := make([]float64, hist.max+1)
+		var delentropy float64
+		for _, bin := range hist.bin {
+			if bin != 0 {
+				// compute the entropy only once for a given bin value.
+				if binDelentropy[bin] == 0.0 {
+					p := float64(bin) / float64(numPix)
+					binDelentropy[bin] = -1.0 * p * math.Log2(p)
+					fmt.Printf("bin value %v has delentropy %v\n", bin, binDelentropy[bin])
+				}
+				delentropy += binDelentropy[bin]
+			}
 		}
-		supp := hist.RenderSuppressed()
-		checkName := filepath.Join(TestDir, test.suppressedImageName)
+		//t.Errorf("old code delentropy: %v\n", delentropy)
+		/////////////////
+
+		bins := hist.Bins()
+		if !reflect.DeepEqual(bins, test.bins) {
+			//fmt.Printf("bin array: %v", hist.bin)
+			t.Errorf("Error: hist.Bins() for %s incorrect, expected\n%v\n got\n%v\n",
+				test.name, test.bins, bins)
+		}
+
+		var totalBins uint32
+		for _, binVal := range hist.bin {
+			totalBins += binVal
+		}
+		if totalBins != numPix {
+			t.Errorf("Error: histogram bins total %d not equal to number of pixels %d\n",
+				totalBins, numPix)
+		}
+		totalBins = 0
+		for _, binVal := range bins {
+			totalBins += binVal.BinVal * binVal.Num
+			/*
+			for _, bin := range hist.bin {
+				if binVal.binVal == bin {
+					totalBins += binVal.binVal
+				}
+			}
+			*/
+		}
+		if totalBins != numPix {
+			t.Errorf("Error: histogram bins that occurred total %d not equal to number of pixels %d\n",
+				totalBins, numPix)
+		}
+
+		for _, test := range test.binTests {
+			index := hist.BinForPixel(test.x, test.y)
+			binval := bins[index]
+			if binval.BinVal != test.binval {
+				t.Errorf("Error:bin value for pixel (%d, %d) incorrect, expected %d, got %d, index is %d",
+					test.x, test.y, test.binval, binval.BinVal, index)
+			}
+		}
+
+		rnd := hist.Render(true)
+		checkName := filepath.Join(TestDir, test.renderedHistogramName)
 		check, err := Read(checkName)
 		if err != nil {
-			t.Errorf("Error reading suppressed histogram check image: %v\n", test.suppressedImageName)
+			name := SaveFailedSimage(checkName, rnd)
+			t.Errorf("Error reading rendered histogram check image: %v\nFailed saved in file %v\n",
+				test.renderedHistogramName, name)
+		}
+		if !reflect.DeepEqual(rnd.Pix(), check.Pix()) {
+			name := SaveFailedSimage(checkName, rnd)
+			t.Errorf("Error: rendered histogram image does not match expected.\nExpected in file " +
+				checkName + "\nFailed saved in file " + name)
+		}
+		rnd = hist.Render(false)
+		checkName = filepath.Join(TestDir, test.renderedScaledHistogramName)
+		check, err = Read(checkName)
+		if err != nil {
+			name := SaveFailedSimage(checkName, rnd)
+			t.Errorf("Error reading rendered scaled histogram check image: %v\nFailed savid in file %v\n",
+				test.renderedScaledHistogramName, name)
+		}
+		if !reflect.DeepEqual(rnd.Pix(), check.Pix()) {
+			name := SaveFailedSimage(checkName, rnd)
+			t.Errorf("Error: rendered histogram image does not match expected.\nExpected in file " +
+				checkName + "\nFailed saved in file " + name)
+		}
+
+		supp := hist.RenderSuppressed()
+		checkName = filepath.Join(TestDir, test.suppressedImageName)
+		check, err = Read(checkName)
+		if err != nil {
+			name := SaveFailedSimage(checkName, supp)
+			t.Errorf("Error reading suppressed histogram check image: %v\nFailed saved in file %v\n",
+				test.suppressedImageName, name)
 		}
 		if !reflect.DeepEqual(supp.Pix(), check.Pix()) {
 			// Write out the check image and report names of mismatched files
@@ -172,16 +378,18 @@ func TestHist(t *testing.T) {
 			t.Errorf("Error: suppressed histogram image does not match expected.\nExpected in file " +
 				checkName + "\nFailed saved in file " + name)
 		}
-		rnd := hist.Render()
-		checkName = filepath.Join(TestDir, test.renderedHistogramName)
-		check, err = Read(checkName)
-		if err != nil {
-			t.Errorf("Error reading rendered histogram check image: %v\n", test.renderedHistogramName)
-		}
-		if !reflect.DeepEqual(rnd.Pix(), check.Pix()) {
-			name := SaveFailedSimage(checkName, rnd)
-			t.Errorf("Error: rendered histogram image does not match expected.\nExpected in file " +
-				checkName + "\nFailed saved in file " + name)
-		}
+
+		// TODO: Test setupInvertedBins
+
+		// TODO: Test RenderSubstitute
+		// Come up with an interesting substitution.
+		// Render an image.
+		// Compare images and write out on failure, as above.
 	}
 }
+
+/*
+func TestSparseHist(t *testing.T) {
+	t.Error("sparse test unimplemented")
+}
+*/

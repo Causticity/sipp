@@ -122,3 +122,6 @@ var CosxCosyTiny = image.Gray {
 }
 
 var CosxCosyTinyStride = 20
+var CosxCosyTinyMaxReExc = 40
+var CosxCosyTinyMaxImExc = 40
+var CosxCosyTinyMaxExcursion = 40

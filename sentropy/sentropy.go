@@ -1,4 +1,4 @@
-// Copyright Raul Vera 2015-2016
+// Copyright Raul Vera
 
 // Package sentropy provides functions for computing entropy and delentropy
 // of SippImages, as well as rendering these as images.
@@ -26,7 +26,7 @@ type SippEntropy struct {
 	// The largest entropy value of any bin.
 	MaxBinEntropy float64
 	// The entropy for the image, i.e. the sum of the entropies for all
-	// the bins.
+	// the pixels.
 	Entropy float64
 }
 
@@ -87,36 +87,35 @@ func (ent *SippEntropy) EntropyImage() SippImage {
 // and the delentropy values derived from it.
 type SippDelentropy struct {
 	// A reference to the histogram we are computing from
-	hist *SippHist
-	// The delentropy for each bin value that actually occurred.
+	hist SippHist
+	// The delentropy for each bin value, in the same order as returned by
+	// SippHist.Bins().
 	binDelentropy []float64
 	// The largest delentropy value of any bin.
 	maxBinDelentropy float64
 	// The delentropy for the image, i.e. the sum of the delentropies for all
-	// the bins.
+	// of the histogram bins.
 	Delentropy float64
 }
 
 // Delentropy returns a SippDelentropy structure for the given SippHist.
-func Delentropy(hist *SippHist) (dent *SippDelentropy) {
+func Delentropy(hist SippHist) (dent *SippDelentropy) {
 	// Store the entropy values corresponding to the bin counts that actually
 	// occurred.
 	dent = new(SippDelentropy)
 	dent.hist = hist
-	dent.binDelentropy = make([]float64, hist.Max+1)
-	total := float64(len(hist.Grad.Pix))
-	for _, bin := range hist.Bin {
-		if bin != 0 {
-			// compute the entropy only once for a given bin value.
-			if dent.binDelentropy[bin] == 0.0 {
-				p := float64(bin) / total
-				dent.binDelentropy[bin] = -1.0 * p * math.Log2(p)
-			}
-			dent.Delentropy += dent.binDelentropy[bin]
-			if dent.binDelentropy[bin] > dent.maxBinDelentropy {
-				dent.maxBinDelentropy = dent.binDelentropy[bin]
-			}
+	bins := hist.Bins()
+	dent.binDelentropy = make([]float64, len(bins))
+	// Pix is a slice of complex128s, so it's length is the number of pixels.
+	numPixels := float64(len(hist.Grad().Pix))
+
+	for i, bin := range bins {
+		p := float64(bin.BinVal) / numPixels
+		dent.binDelentropy[i] = -1.0 * p * math.Log2(p)
+		if dent.binDelentropy[i] > dent.maxBinDelentropy {
+			dent.maxBinDelentropy = dent.binDelentropy[i]
 		}
+		dent.Delentropy += dent.binDelentropy[i] * float64(bin.Num)
 	}
 	return
 }
@@ -125,16 +124,18 @@ func Delentropy(hist *SippHist) (dent *SippDelentropy) {
 // histogram bin.
 func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 	// Make a greyscale image of the entropy for each bin.
-	width, height := dent.hist.Size()
-	dentGray := new(SippGray)
-	dentGray.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
-	dentGrayPix := dentGray.Pix()
+//	width, height := dent.hist.Size()
+//	dentGray := new(SippGray)
+//	dentGray.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
+//	dentGrayPix := dentGray.Pix()
+	bins := dent.hist.Bins()
+	scaledDelentropy := make([]uint8, len(bins))
 	// scale the delentropy from (0-hist.maxBinDelentropy) to (0-255)
 	scale := 255.0 / dent.maxBinDelentropy
-	for i, val := range dent.hist.Bin {
-		dentGrayPix[i] = uint8(dent.binDelentropy[val] * scale)
+	for i, _ := range bins {
+		scaledDelentropy[i] = uint8(float64(dent.binDelentropy[i]) * scale)
 	}
-	return dentGray
+	return dent.hist.RenderSubstitute(scaledDelentropy)
 }
 
 // DelEntropyImage returns a greyscale image of the entropy for each gradient
@@ -142,18 +143,15 @@ func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 func (dent *SippDelentropy) DelEntropyImage() SippImage {
 	// Make a greyscale image of the entropy for each bin.
 	dentGray := new(SippGray)
-	dentGray.Gray = image.NewGray(dent.hist.Grad.Rect)
+	dentGray.Gray = image.NewGray(dent.hist.Grad().Rect)
 	dentGrayPix := dentGray.Pix()
 	// scale the entropy from (0-hist.maxBinDelentropy) to (0-255)
 	scale := 255.0 / dent.maxBinDelentropy
-	for i := range dentGrayPix {
-		// The following lookup works as follows:
-		// i - the gradient (and delentropy) image-pixel index
-		// hist.BinIndex[i] - the histogram bin for that pixel
-		// hist.Bin[hist.BinIndex[i] - the value in that bin
-		// dent.binDelentropy[...] The delentropy for that value
-		// We scale that delentropy and convert to an 8-bit pixel
-		dentGrayPix[i] = uint8(dent.binDelentropy[dent.hist.Bin[dent.hist.BinIndex[i]]] * scale)
+	for y := 0; y < dentGray.Bounds().Dy(); y++ {
+		for x := 0; x < dentGray.Bounds().Dx(); x++ {
+			i := dentGray.PixOffset(x, y)
+			dentGrayPix[i] = uint8(dent.binDelentropy[dent.hist.BinForPixel(x, y)] * scale)
+		}
 	}
 	return dentGray
 }

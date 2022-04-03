@@ -56,11 +56,15 @@ var cosxCosyTinyEntropyImage = []uint8{
 	154, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 255, 255, 154, 154, 255, 255, 154,
 }
 
-var expectedDelentropy float64 = 6.775012499324645
+var expectedDelentropy float64 = 6.775012499324653
 var expectedMaxDelentropy float64 = 0.12179180114985422
 var expectedDelentropyArray = []float64{
-	0, 0.023534224451211, 0.04152828269743585, 0, 0.0719762329848994,
-	0.0855114533517979, 0.09824198104431049, 0, 0.12179180114985422,
+	0.023534224451211,
+	0.04152828269743585,
+	0.09824198104431049,
+	0.12179180114985422,
+	0.0719762329848994,
+	0.0855114533517979,
 }
 
 var cosxCosyTinyDelentropyImageArray = []uint8{
@@ -166,6 +170,7 @@ func TestDelentropy(t *testing.T) {
 			t.Errorf("Error: delentropy for %s incorrect. Expected %v, got %v",
 				test.name, test.delentropy, dent.Delentropy)
 		}
+
 		histDentImage := dent.HistDelentropyImage()
 		checkName := filepath.Join(TestDir, test.histDelentropyImageName)
 		check, err := Read(checkName)
@@ -178,6 +183,7 @@ func TestDelentropy(t *testing.T) {
 			t.Errorf("Error: histogram delentropy image does not match expected.\nExpected in file " +
 				checkName + "\nFailed saved in file " + name)
 		}
+
 		delentImage := dent.DelEntropyImage()
 		if !reflect.DeepEqual(delentImage.Pix(), test.delentropyImage.Pix()) {
 			t.Errorf("Error: gradient delentropy image incorrect. Expected %v, got %v\n",
