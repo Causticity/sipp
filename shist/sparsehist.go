@@ -110,6 +110,6 @@ func (hist *sparseSippHist) RenderSuppressed() SippImage {
 // input slice must be the same length as the slice of bin values returned
 // by Bins, and contain new values corresponding to that order.
 // This is used to render the delentropy values of the histogram.
-func (hist *sparseSippHist) RenderSubstitute(subs []uint8) SippImage {
+func (hist *sparseSippHist) RenderSubstitute(subs []uint8, zeroVal uint8) SippImage {
 	return nil
 }

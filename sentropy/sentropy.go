@@ -135,7 +135,7 @@ func (dent *SippDelentropy) HistDelentropyImage() SippImage {
 	for i, _ := range bins {
 		scaledDelentropy[i] = uint8(float64(dent.binDelentropy[i]) * scale)
 	}
-	return dent.hist.RenderSubstitute(scaledDelentropy)
+	return dent.hist.RenderSubstitute(scaledDelentropy, 0)
 }
 
 // DelEntropyImage returns a greyscale image of the entropy for each gradient

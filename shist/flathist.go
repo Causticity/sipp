@@ -199,8 +199,8 @@ func setupInvertedBins(hist *flatSippHist) {
 // by Bins, and contain new values corresponding to that order.
 // This is used to render the delentropy values of the histogram.
 // Note that as the slice returned by Bins() does not include 0 values,
-// empty histogram bins always render as 0.
-func (hist *flatSippHist) RenderSubstitute(subs []uint8) SippImage {
+// the value to be used for empty bins must be supplied.
+func (hist *flatSippHist) RenderSubstitute(subs []uint8, zeroVal uint8) SippImage {
 	if hist.invertedBins == nil {
 		setupInvertedBins(hist)
 	}
@@ -210,7 +210,7 @@ func (hist *flatSippHist) RenderSubstitute(subs []uint8) SippImage {
 	rndPix := rnd.Pix()
 	for index, val := range hist.bin {
 		if val == 0 {
-			rndPix[index] = 0;
+			rndPix[index] = zeroVal;
 		} else {
 			rndPix[index]= subs[hist.invertedBins[val]]
 		}

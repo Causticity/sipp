@@ -44,14 +44,20 @@ type SippHist interface {
 	// to 255. TODO: Image dimensions are scaled down for very large histograms.
 	Render(clip bool) SippImage
 	// RenderSuppressed renders a suppressed version of the histogram and returns
-	// the result as an 8-bit grayscale image.
+	// the result as an 8-bit grayscale image. "Suppressed" here means that the
+	// bin value is scaled by the ratio of the distance of the bin from 0 over
+	// the maximum distance. Hence the centre is reduced to 0, the maximum
+	// value remains unmodified, and all values in between will be scaled
+	// linearly between them.
 	RenderSuppressed() SippImage
 	// RenderSubstitute renders an 8-bit image of the histogram, substituting
 	// the given value as the pixel value for each corresponding bin value. The
 	// input slice must be the same length as the slice of bin values returned
 	// by Bins, and contain new values corresponding to that order.
+	// Note that as the slice returned by Bins() does not include 0 values,
+	// the value to be used for empty bins must be supplied.
 	// This is used to render the delentropy values of the histogram.
-	RenderSubstitute(subs []uint8) SippImage
+	RenderSubstitute(subs []uint8, zeroVal uint8) SippImage
 }
 
 // Internally, a 2D histogram can be either "flat", meaning that storage exists
