@@ -107,6 +107,10 @@ var cosxCosyTinyBins = []BinPair{
 	{1, 12}, {2, 78}, {6, 18}, {8, 1}, {4, 13}, {5, 5},
 }
 
+var cosxCosyTinyInvertedBins = map[uint32]int {
+    1:0, 2:1, 6:2, 8:3, 4:4, 5:5,
+}
+
 var cosxCosyTinyHistWidth = CosxCosyTinyMaxReExc*2+1
 var cosxCosyTinyHistHeight = CosxCosyTinyMaxImExc*2+1
 
@@ -206,6 +210,7 @@ func TestFlatHist(t *testing.T) {
 		suppressedImageName   		string
 		renderedHistogramName 		string
 		renderedScaledHistogramName	string
+		invertedBins                map[uint32]int
 	}
 
 	var flatTests = []flatHistTest {
@@ -229,6 +234,7 @@ func TestFlatHist(t *testing.T) {
 			"cosxcosy_tiny_hist_sup.png",
 			"cosxcosy_tiny_hist.png",
 			"cosxcosy_tiny_hist_scaled.png",
+			cosxCosyTinyInvertedBins,
 		},
 	}
 
@@ -315,13 +321,6 @@ func TestFlatHist(t *testing.T) {
 		totalBins = 0
 		for _, binVal := range bins {
 			totalBins += binVal.BinVal * binVal.Num
-			/*
-			for _, bin := range hist.bin {
-				if binVal.binVal == bin {
-					totalBins += binVal.binVal
-				}
-			}
-			*/
 		}
 		if totalBins != numPix {
 			t.Errorf("Error: histogram bins that occurred total %d not equal to number of pixels %d\n",
@@ -379,10 +378,14 @@ func TestFlatHist(t *testing.T) {
 				checkName + "\nFailed saved in file " + name)
 		}
 
-		// TODO: Test setupInvertedBins
+		setupInvertedBins(hist)
+		if !reflect.DeepEqual(hist.invertedBins, test.invertedBins) {
+		    t.Errorf("Error: inverted bins map incorrect.\nExpected\n%v\n got\n%v\n",
+		        test.invertedBins, hist.invertedBins)
+	    }
 
 		// TODO: Test RenderSubstitute
-		// Come up with an interesting substitution.
+		// Come up with an interesting substitution. Invert to be black on white
 		// Render an image.
 		// Compare images and write out on failure, as above.
 	}
