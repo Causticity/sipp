@@ -210,6 +210,7 @@ func TestFlatHist(t *testing.T) {
 		suppressedImageName   		string
 		renderedHistogramName 		string
 		renderedScaledHistogramName	string
+		substituedImageName			string
 		invertedBins                map[uint32]int
 	}
 
@@ -234,6 +235,7 @@ func TestFlatHist(t *testing.T) {
 			"cosxcosy_tiny_hist_sup.png",
 			"cosxcosy_tiny_hist.png",
 			"cosxcosy_tiny_hist_scaled.png",
+			"cosxcosy_tiny_hist_white.png",
 			cosxCosyTinyInvertedBins,
 		},
 	}
@@ -255,17 +257,17 @@ func TestFlatHist(t *testing.T) {
 			t.Errorf("Error:SippHist for %s has incorrect height, expected %v, got %v",
 				test.name, test.height, height)
 		}
+		if hist.Max() != test.maxBinVal {
+			t.Errorf("Error: hist.Max for %s incorrect. Expected %v, got %v",
+				test.name, test.maxBinVal, hist.Max())
+		}
+		// Check internal variables
 		count := 0
 		for _, val := range hist.bin {
 			if val != 0 {
 				count++
 			}
 		}
-		if hist.Max() != test.maxBinVal {
-			t.Errorf("Error: hist.Max for %s incorrect. Expected %v, got %v",
-				test.name, test.maxBinVal, hist.Max())
-		}
-		// Check internal variables
 		xpctCnt := test.count
 		if count != xpctCnt {
 			t.Errorf("Error: Histogram for %s has incorrect number of non-zero entries: expected %v, got %v",
@@ -286,30 +288,6 @@ func TestFlatHist(t *testing.T) {
 		numPix := uint32(len(hist.Grad().Pix))
 		fmt.Printf("There are %d pixels\n", numPix)
 
-		///////////////// Temp test against old code
-		binDelentropy := make([]float64, hist.max+1)
-		var delentropy float64
-		for _, bin := range hist.bin {
-			if bin != 0 {
-				// compute the entropy only once for a given bin value.
-				if binDelentropy[bin] == 0.0 {
-					p := float64(bin) / float64(numPix)
-					binDelentropy[bin] = -1.0 * p * math.Log2(p)
-					fmt.Printf("bin value %v has delentropy %v\n", bin, binDelentropy[bin])
-				}
-				delentropy += binDelentropy[bin]
-			}
-		}
-		//t.Errorf("old code delentropy: %v\n", delentropy)
-		/////////////////
-
-		bins := hist.Bins()
-		if !reflect.DeepEqual(bins, test.bins) {
-			//fmt.Printf("bin array: %v", hist.bin)
-			t.Errorf("Error: hist.Bins() for %s incorrect, expected\n%v\n got\n%v\n",
-				test.name, test.bins, bins)
-		}
-
 		var totalBins uint32
 		for _, binVal := range hist.bin {
 			totalBins += binVal
@@ -317,6 +295,20 @@ func TestFlatHist(t *testing.T) {
 		if totalBins != numPix {
 			t.Errorf("Error: histogram bins total %d not equal to number of pixels %d\n",
 				totalBins, numPix)
+		}
+
+		setupInvertedBins(hist)
+		if !reflect.DeepEqual(hist.invertedBins, test.invertedBins) {
+		    t.Errorf("Error: inverted bins map incorrect.\nExpected\n%v\n got\n%v\n",
+		        test.invertedBins, hist.invertedBins)
+	    }
+
+	    // Check the polymorphic API
+		bins := hist.Bins()
+		if !reflect.DeepEqual(bins, test.bins) {
+			//fmt.Printf("bin array: %v", hist.bin)
+			t.Errorf("Error: hist.Bins() for %s incorrect, expected\n%v\n got\n%v\n",
+				test.name, test.bins, bins)
 		}
 		totalBins = 0
 		for _, binVal := range bins {
@@ -378,17 +370,33 @@ func TestFlatHist(t *testing.T) {
 				checkName + "\nFailed saved in file " + name)
 		}
 
-		setupInvertedBins(hist)
-		if !reflect.DeepEqual(hist.invertedBins, test.invertedBins) {
-		    t.Errorf("Error: inverted bins map incorrect.\nExpected\n%v\n got\n%v\n",
-		        test.invertedBins, hist.invertedBins)
-	    }
-
-		// TODO: Test RenderSubstitute
-		// Come up with an interesting substitution. Invert to be black on white
-		// Render an image.
-		// Compare images and write out on failure, as above.
+		whiteBins, zero := blackToWhite(hist.Bins(), hist.Max())
+		subst := hist.RenderSubstitute(whiteBins, zero)
+		checkName = filepath.Join(TestDir, test.substituedImageName)
+		check, err = Read(checkName)
+		if err != nil {
+			name := SaveFailedSimage(checkName, subst)
+			t.Errorf("Error reading substituted histogram check image: %v\nFailed saved in file %v\n",
+				test.substituedImageName, name)
+		}
+		if !reflect.DeepEqual(subst.Pix(), check.Pix()) {
+			// Write out the check image and report names of mismatched files
+			name := SaveFailedSimage(checkName, subst)
+			t.Errorf("Error: substituted histogram image does not match expected.\nExpected in file " +
+				checkName + "\nFailed saved in file " + name)
+		}
 	}
+}
+
+// Invert the bins slice to be black on white.
+func blackToWhite(bins []BinPair, max uint32) (white []uint8, zero uint8) {
+	white = make([]uint8, len(bins))
+	var scale float64 = 255.0 / float64(max)
+	for i, bin := range bins {
+		white[i] = uint8(math.Round(float64(max - bin.BinVal) * scale))
+	}
+	zero = 255
+	return
 }
 
 /*

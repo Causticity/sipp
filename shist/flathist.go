@@ -179,20 +179,6 @@ func (hist *flatSippHist) RenderSuppressed() SippImage {
 	return rnd
 }
 
-// setupInvertedBins populates the invertedBins map for the given histogram.
-// invertedBins stores the index in the bins slice for each occurring histogram
-// value.
-// Used to lazily populate invertedBins when needed.
-func setupInvertedBins(hist *flatSippHist) {
-	if hist.invertedBins != nil {
-		return;
-	}
-	hist.invertedBins = make(map[uint32]int, len(hist.bins))
-	for index, val := range hist.bins {
-		hist.invertedBins[val.BinVal] = index
-	}
-}
-
 // RenderSubstitute renders an 8-bit image of the histogram, substituting
 // the given value as the pixel value for each corresponding bin value. The
 // input slice must be the same length as the slice of bin values returned

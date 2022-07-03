@@ -30,6 +30,8 @@ type SippHist interface {
 	// Size returns the width and height of the full histogram. ints are used
 	// instead of uint32s for compatibility with native Go pixel indexing.
 	Size() (int, int)
+	// Max returns the maximum bin value that occurs in this histogram
+	Max() (uint32)
 	// Bins returns a compact slice of BinPairs for the histogram, without
 	// duplicates. There is no order specified, but each call to Bins returns
 	// the values in the same order.
@@ -37,8 +39,6 @@ type SippHist interface {
 	// BinForPixel returns the index in the slice returned by Bins for the
 	// given gradient-image pixel.
 	BinForPixel(x, y int) (int)
-	// Max returns the maximum bin value that occurs in this histogram
-	Max() (uint32)
 	// Render returns a rendering of this histogram as an 8-bit image.  If clip
 	// is true, values are clipped to 255. If clip is false, values are scaled
 	// to 255. TODO: Image dimensions are scaled down for very large histograms.
@@ -56,7 +56,8 @@ type SippHist interface {
 	// by Bins, and contain new values corresponding to that order.
 	// Note that as the slice returned by Bins() does not include 0 values,
 	// the value to be used for empty bins must be supplied.
-	// This is used to render the delentropy values of the histogram.
+	// This is used to render point transforms of the histogram, such as the
+	// delentropy values.
 	RenderSubstitute(subs []uint8, zeroVal uint8) SippImage
 }
 
@@ -151,4 +152,18 @@ func supScale(x, y, centx, centy int, maxDist float64) float64 {
 	ydist := float64(y - centy)
 	hyp := math.Hypot(xdist, ydist)
 	return (hyp / maxDist)
+}
+
+// setupInvertedBins populates the invertedBins map for the given histogram.
+// invertedBins stores the index in the bins slice for each occurring histogram
+// value.
+// Used to lazily populate invertedBins when needed.
+func setupInvertedBins(hist *flatSippHist) {
+	if hist.invertedBins != nil {
+		return;
+	}
+	hist.invertedBins = make(map[uint32]int, len(hist.bins))
+	for index, val := range hist.bins {
+		hist.invertedBins[val.BinVal] = index
+	}
 }
