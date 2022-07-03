@@ -297,7 +297,7 @@ func TestFlatHist(t *testing.T) {
 				totalBins, numPix)
 		}
 
-		setupInvertedBins(hist)
+		hist.invertedBins = setupInvertedBins(hist.bins)
 		if !reflect.DeepEqual(hist.invertedBins, test.invertedBins) {
 		    t.Errorf("Error: inverted bins map incorrect.\nExpected\n%v\n got\n%v\n",
 		        test.invertedBins, hist.invertedBins)

@@ -72,33 +72,11 @@ func makeFlatHist(grad *ComplexImage, width, height int) SippHist {
 	// distinct bin values, so it can be used as the capacity of the slice of
 	// distinct bin values.
 	hist.bins = make([]BinPair, 0, numUsedBins)
-
 	for _, binval := range hist.bin {
-		var found bool
-		if binval != 0 {
-			found = false
-			//fmt.Printf("looking for binval %d\n", binval)
-			for i, pair := range hist.bins {
-				if binval == pair.BinVal {
-					//fmt.Println("Found it, incrementing pair.num")
-					hist.bins[i].Num++
-					found = true
-				}
-			}
-			if found == false {
-				//fmt.Printf("Appending pair for binval %d\n", binval)
-				hist.bins = append(hist.bins, BinPair{binval, 1})
-			}
-		}
+		addBinsValue(&hist.bins, binval)
 	}
 	//fmt.Println("Histogram complete. Maximum bin value:", hist.Max)
 	return hist
-}
-
-// Bins returns a compact slice of the actually used bins. There is no order
-// specified, but each call to Bins returns the values in the same order.
-func (hist *flatSippHist) Bins() ([]BinPair) {
-	return hist.bins
 }
 
 // BinForPixel returns the bin index in the slice returned by Bins for the
@@ -188,7 +166,7 @@ func (hist *flatSippHist) RenderSuppressed() SippImage {
 // the value to be used for empty bins must be supplied.
 func (hist *flatSippHist) RenderSubstitute(subs []uint8, zeroVal uint8) SippImage {
 	if hist.invertedBins == nil {
-		setupInvertedBins(hist)
+		hist.invertedBins = setupInvertedBins(hist.bins)
 	}
 	width, height := hist.Size()
 	rnd := new(SippGray)

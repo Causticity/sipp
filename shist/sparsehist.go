@@ -69,28 +69,45 @@ func makeSparseHist(grad *ComplexImage, width, height int) SippHist {
 	hist.width = width
 	hist.height = height
 	hist.sparse = make(map[complex128]uint32)
+	var numUsedBins uint32
 	for _, pixel := range grad.Pix {
 		v := hist.sparse[pixel]
-		v++ // v is 0 for the empty initial case, so this always works
+		if v == 0 {
+			// First use of this bin, so count it
+			numUsedBins++
+		}
+		v++
 		hist.sparse[pixel] = v
 		if v > hist.max {
 			hist.max = v
 		}
 	}
+	// numUsedBins is larger, or in the worst case equal, to the number of
+	// distinct bin values, so it can be used as the capacity of the slice of
+	// distinct bin values.
+	hist.bins = make([]BinPair, 0, numUsedBins)
+	for _, binval := range hist.sparse {
+		addBinsValue(&hist.bins, binval)
+	}
 	return hist
-}
-
-// Bins returns a compact slice of the bin values, without duplicates. There
-// is no order specified, but each call to Bins returns the values in the
-// same order.
-func (hist *sparseSippHist) Bins() ([]BinPair) {
-	return nil
 }
 
 // BinForPixel returns the bin index in the slice returned by Bins for the
 // given gradient-image pixel.
 func (hist *sparseSippHist) BinForPixel(x, y int) (int) {
-	return 0
+	// get the complex value in the image at x, y
+	stride := hist.grad.Rect.Dx()
+	index := y*stride+x
+	pixel := hist.grad.Pix[index]
+	// get the value from the map
+	val:= hist.sparse[pixel]
+	// find the value in the bins slice
+	for i, binVal := range hist.bins {
+		if val == binVal.BinVal {
+			return i
+		}
+	}
+	panic("No bin found for pixel!");
 }
 
 // Render renders the histogram by clipping all values to 255. Returns an 8-bit

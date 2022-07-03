@@ -96,6 +96,10 @@ func (hist *histCore) Max() (uint32) {
 	return hist.max
 }
 
+func (hist *histCore) Bins() ([]BinPair) {
+	return hist.bins
+}
+
 // Compute the width and height of the histogram and the maximum excursion.
 // The width and height are twice the maximum excursion on the real and
 // imaginary axes, respectively, plus one to ensure that the width and height
@@ -154,16 +158,36 @@ func supScale(x, y, centx, centy int, maxDist float64) float64 {
 	return (hyp / maxDist)
 }
 
+// addBinsValue adds to the bins slice, either by incrementing the Num of the
+// relevant entry if the value is already in the slice, or appending a new entry
+// if it isn't. Note that we can't pass the slice by value due to the append.
+func addBinsValue(bins *[]BinPair, binval uint32) {
+	var found bool
+	if binval != 0 {
+		found = false
+		//fmt.Printf("looking for binval %d\n", binval)
+		for i, pair := range *bins {
+			if binval == pair.BinVal {
+				//fmt.Println("Found it, incrementing pair.num")
+				(*bins)[i].Num++
+				found = true
+			}
+		}
+		if found == false {
+			//fmt.Printf("Appending pair for binval %d\n", binval)
+			*bins = append(*bins, BinPair{binval, 1})
+		}
+	}
+}
+
 // setupInvertedBins populates the invertedBins map for the given histogram.
 // invertedBins stores the index in the bins slice for each occurring histogram
 // value.
 // Used to lazily populate invertedBins when needed.
-func setupInvertedBins(hist *flatSippHist) {
-	if hist.invertedBins != nil {
-		return;
+func setupInvertedBins(bins []BinPair) (invertedBins map[uint32]int) {
+	invertedBins = make(map[uint32]int, len(bins))
+	for index, val := range bins {
+		invertedBins[val.BinVal] = index
 	}
-	hist.invertedBins = make(map[uint32]int, len(hist.bins))
-	for index, val := range hist.bins {
-		hist.invertedBins[val.BinVal] = index
-	}
+	return
 }
