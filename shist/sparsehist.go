@@ -55,6 +55,8 @@ func upToNextPowerOf2(n uint32) uint32 {
 	return 1 << (32 - lz)
 }
 
+// maxSparseHistSize returns the maximum size of a sparse histogram for the
+// given image, in uint32s.
 func maxSparseHistSize(grad *ComplexImage) int {
 	// The maximum size of a sparse histogram is one sparseHistogramEntry per
 	// gradient pixel, but Go maps always have a power of 2 number of entries.
@@ -87,7 +89,7 @@ func makeSparseHist(grad *ComplexImage, width, height int) SippHist {
 	// distinct bin values.
 	hist.bins = make([]BinPair, 0, numUsedBins)
 	for _, binval := range hist.sparse {
-		addBinsValue(&hist.bins, binval)
+		hist.bins = addBinsValue(hist.bins, binval)
 	}
 	return hist
 }
@@ -110,16 +112,26 @@ func (hist *sparseSippHist) BinForPixel(x, y int) (int) {
 	panic("No bin found for pixel!");
 }
 
-// Render renders the histogram by clipping all values to 255. Returns an 8-bit
-// grayscale image.
-func (hist *sparseSippHist) Render(clip bool) SippImage {
+// Implement the rowSource interface for rendering
+// rowVals returns a slice containing the bin values for one complete row of
+// the histogram.
+func (hist *sparseSippHist) rowVals(y int) []uint32 {
 	return nil
+}
+// Render renders the histogram into an 8-bit grayscale image. If clip is true,
+// values are clipped to 255. If clip is false, values are scaled to 255.
+// Sparse histograms are rendered scaled to the the maximum flat histogram
+// excursion. See shist.go.
+func (hist *sparseSippHist) Render(clip bool) SippImage {
+	return hist.renderCore(hist, clip)
 }
 
 // RenderSuppressed renders a suppressed version of the histogram and returns
 // the result as an 8-bit grayscale image.
+// Sparse histograms are rendered scaled down to the the maximum flat histogram
+// size.
 func (hist *sparseSippHist) RenderSuppressed() SippImage {
-	return nil
+	return hist.renderSuppressedCore(hist)
 }
 
 // RenderSubstitute renders an 8-bit image of the histogram, substituting
@@ -127,6 +139,8 @@ func (hist *sparseSippHist) RenderSuppressed() SippImage {
 // input slice must be the same length as the slice of bin values returned
 // by Bins, and contain new values corresponding to that order.
 // This is used to render the delentropy values of the histogram.
+// Sparse histograms are rendered scaled down to the the maximum flat histogram
+// size.
 func (hist *sparseSippHist) RenderSubstitute(subs []uint8, zeroVal uint8) SippImage {
-	return nil
+	return hist.renderSubstituteCore(hist, subs, zeroVal)
 }

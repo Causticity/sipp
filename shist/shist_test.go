@@ -155,7 +155,8 @@ func TestHistCore(t *testing.T) {
 	}
 
 	type supScaleTest struct {
-		x, y, cx, cy int
+		x, y int
+		cx, cy float64
 		md float64
 		exp float64
 	}

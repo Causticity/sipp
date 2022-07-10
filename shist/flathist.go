@@ -4,7 +4,7 @@ package shist
 
 import (
 	//"fmt"
-	"image"
+	//"image"
 	"math"
 )
 
@@ -73,7 +73,7 @@ func makeFlatHist(grad *ComplexImage, width, height int) SippHist {
 	// distinct bin values.
 	hist.bins = make([]BinPair, 0, numUsedBins)
 	for _, binval := range hist.bin {
-		addBinsValue(&hist.bins, binval)
+		hist.bins = addBinsValue(hist.bins, binval)
 	}
 	//fmt.Println("Histogram complete. Maximum bin value:", hist.Max)
 	return hist
@@ -96,88 +96,22 @@ func (hist *flatSippHist) BinForPixel(x, y int) (int) {
 	panic("No bin found for pixel!");
 }
 
-// suppress returns a suppressed version of the bins of the histogram, along
-// with the maximum suppressed value.
-func (hist *flatSippHist) suppress() (suppressed []float64, maxSuppressed float64 ){
-	centx := (int(hist.width)-1)/2
-	centy := (int(hist.height)-1)/2
-
-	size := int(hist.width) * int(hist.height)
-	suppressed = make([]float64, size)
-	var index int = 0
-	for y := 0; y < int(hist.height); y++ {
-		for x := 0; x < int(hist.width); x++ {
-			sscale := supScale(x, y, centx, centy, hist.grad.MaxMod)
-			suppressed[index] = float64(hist.bin[index]) * sscale
-			if suppressed[index] > maxSuppressed {
-				maxSuppressed = suppressed[index]
-			}
-			index++
-		}
-	}
-	//fmt.Println("Distance suppression complete; max suppressed value:", supp.Max)
-	return
+// Implement the rowSource interface for rendering
+// rowVals returns a slice containing the bin values for one complete row of
+// the histogram.
+func (hist *flatSippHist) rowVals(y int) []uint32 {
+	i := y * hist.width
+	return hist.bin[i:i+hist.width]
 }
 
-// Render renders the histogram into an 8-bit grayscale image. If clip is true,
-// values are clipped to 255. If clip is false, values are scaled to 255.
 func (hist *flatSippHist) Render(clip bool) SippImage {
-	width, height := hist.Size()
-	rnd := new(SippGray)
-	rnd.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
-	rndPix := rnd.Pix()
-	var scale float64 = 255.0 / float64(hist.max)
-	//fmt.Println("Render scale factor:", scale)
-	for index, val := range hist.bin {
-		if clip {
-			if val > 255 {
-				val = 255
-			}
-		} else {
-			val = uint32(math.Round(float64(val) * scale))
-		}
-		rndPix[index] = uint8(val)
-	}
-	return rnd
+	return hist.renderCore(hist, clip)
 }
 
-// RenderSuppressed renders a suppressed version of the histogram and returns
-// the result as an 8-bit grayscale image.
 func (hist *flatSippHist) RenderSuppressed() SippImage {
-	suppressed, maxSuppressed := hist.suppress()
-	width, height := hist.Size()
-	var scale float64 = 255.0 / maxSuppressed
-	//fmt.Println("Suppressed Render scale factor:", scale)
-	rnd := new(SippGray)
-	rnd.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
-	rndPix := rnd.Pix()
-	for index, val := range suppressed {
-		rndPix[index] = uint8(val * scale)
-	}
-	return rnd
+	return hist.renderSuppressedCore(hist)
 }
 
-// RenderSubstitute renders an 8-bit image of the histogram, substituting
-// the given value as the pixel value for each corresponding bin value. The
-// input slice must be the same length as the slice of bin values returned
-// by Bins, and contain new values corresponding to that order.
-// This is used to render the delentropy values of the histogram.
-// Note that as the slice returned by Bins() does not include 0 values,
-// the value to be used for empty bins must be supplied.
 func (hist *flatSippHist) RenderSubstitute(subs []uint8, zeroVal uint8) SippImage {
-	if hist.invertedBins == nil {
-		hist.invertedBins = setupInvertedBins(hist.bins)
-	}
-	width, height := hist.Size()
-	rnd := new(SippGray)
-	rnd.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
-	rndPix := rnd.Pix()
-	for index, val := range hist.bin {
-		if val == 0 {
-			rndPix[index] = zeroVal;
-		} else {
-			rndPix[index]= subs[hist.invertedBins[val]]
-		}
-	}
-	return rnd
+	return hist.renderSubstituteCore(hist, subs, zeroVal)
 }

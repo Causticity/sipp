@@ -6,6 +6,7 @@
 package shist
 
 import (
+	"image"
 	"fmt"
 	"math"
 )
@@ -41,7 +42,7 @@ type SippHist interface {
 	BinForPixel(x, y int) (int)
 	// Render returns a rendering of this histogram as an 8-bit image.  If clip
 	// is true, values are clipped to 255. If clip is false, values are scaled
-	// to 255. TODO: Image dimensions are scaled down for very large histograms.
+	// to 255.
 	Render(clip bool) SippImage
 	// RenderSuppressed renders a suppressed version of the histogram and returns
 	// the result as an 8-bit grayscale image. "Suppressed" here means that the
@@ -122,9 +123,6 @@ func computeHistSize(grad *ComplexImage) (maxExcursion, width, height int) {
 // 16-bit images, even though the sparse histogram would usually be smaller.
 // Note that excursion, the distance from 0 along either axis of the complex
 // plane, is always positive.
-// TODO: Later, this will be used to scale down sparse histograms for rendering,
-// so that histogram renderings will never be more that double this value on a
-// side.
 const minSparseExcursion = 1024
 
 // Hist computes the 2D histogram from the given gradient image.
@@ -148,36 +146,155 @@ func Hist(grad *ComplexImage) (hist SippHist) {
 	return
 }
 
-// supScale determines a scale factor that is the ratio of the distance to
-// the given x, y from the given centre, over the given maximum distance.
-// This is used for rendering suppressed images of the histogram.
-func supScale(x, y, centx, centy int, maxDist float64) float64 {
-	xdist := float64(x - centx)
-	ydist := float64(y - centy)
-	hyp := math.Hypot(xdist, ydist)
-	return (hyp / maxDist)
-}
-
 // addBinsValue adds to the bins slice, either by incrementing the Num of the
 // relevant entry if the value is already in the slice, or appending a new entry
-// if it isn't. Note that we can't pass the slice by value due to the append.
-func addBinsValue(bins *[]BinPair, binval uint32) {
+// if it isn't. Returns the slice, or a new one if append is used.
+func addBinsValue(bins []BinPair, binval uint32) []BinPair{
 	var found bool
 	if binval != 0 {
 		found = false
 		//fmt.Printf("looking for binval %d\n", binval)
-		for i, pair := range *bins {
+		for i, pair := range bins {
 			if binval == pair.BinVal {
 				//fmt.Println("Found it, incrementing pair.num")
-				(*bins)[i].Num++
+				bins[i].Num++
 				found = true
 			}
 		}
 		if found == false {
 			//fmt.Printf("Appending pair for binval %d\n", binval)
-			*bins = append(*bins, BinPair{binval, 1})
+			bins = append(bins, BinPair{binval, 1})
 		}
 	}
+	return bins
+}
+
+// The maximum size of either dimension of a rendering of a histogram. If
+// either excursion is such that the image would be larger than this in either
+// dimension, then the histogram is scaled, equally in both dimensions to
+// preserve aspect ratio, so that the larger dimension is this size.
+const maxRenderExtent = 4096
+
+// renderInto creates and returns a new 8-bit Sippimage correctly sized for the
+// histogram, along with the scale factor used and the pixel scale factor
+// mapping the maximum bin value to 255. The correct size is determined by
+// taking maxRenderExtent into account. If the histogram is already
+// smaller in both dimensions, the existing width and height are used.
+// Otherwise, the larger dimension is scaled down to maxRenderExtent and the
+// other dimension is scaled by the same factor, preserving the aspect ratio.
+func (hist *histCore) renderInto() (rnd *SippGray, scale, pixScale float64) {
+	rnd = new(SippGray)
+	var width, height int
+	width, height = hist.Size()
+	if (width <= maxRenderExtent && height <= maxRenderExtent) {
+		scale = 1.0
+	} else if hist.width > maxRenderExtent {
+		width = maxRenderExtent
+		scale = float64(hist.width)/float64(maxRenderExtent)
+		height = int(float64(hist.height)/scale)
+	} else {
+		height = maxRenderExtent
+		scale = float64(hist.height)/float64(maxRenderExtent)
+		width = int(float64(hist.width)/scale)
+	}
+	rnd.Gray = image.NewGray(image.Rect(0, 0, int(width), int(height)))
+	pixScale = 255.0 / float64(hist.max)
+	return
+}
+
+// A rowSource provides a method for returning a complete row of the histogram.
+// Both histogram types, flat and sparse, implement this method, which is used
+// for rendering.
+type rowSource interface {
+	// rowVals returns a slice containing the bin values for one complete row of
+	// the histogram.
+	rowVals(y int) []uint32
+}
+
+// renderCore renders the histogram into an 8-bit grayscale image. The calling
+// histogram provides itself as the row source. If clip is true, values are
+// clipped to 255. If clip is false, values are scaled to 255.
+func (hist *histCore) renderCore(rs rowSource, clip bool) SippImage {
+	rnd, scale, pixScale := hist.renderInto()
+	rndPix := rnd.Pix()
+	//fmt.Println("Render pixel scale factor:", pixScale)
+	if scale == 1.0  {
+		for row := 0; row < hist.height; row++ {
+			histRow := rs.rowVals(row)
+			for index, val := range histRow {
+				if clip {
+					if val > 255 {
+						val = 255
+					}
+				} else {
+					val = uint32(math.Round(float64(val) * pixScale))
+				}
+				rndPix[row*hist.width+index] = uint8(val)
+			}
+		}
+	} else {
+		// Render by rows to ensure that the intermediate fits in memory
+		// Use a block as wide as the output image but only as tall as one
+		// vertical filter. Fill this block, generate the output row, then
+		// roll the block.
+		// Allocate the intermediate block as a ring buffer of rows
+		// precompute both filters
+		// fill the first row of the ring buffer by filtering horizontally
+		// for each ouput row
+			// fill the remaining rows of the ring buffer by filtering horizontally
+			// filter the buffer vertically into the output row
+			// discard all the rows except the last (if the filter is non-zero!)
+			// make the last row the first
+	}
+	return rnd
+}
+
+// supScale determines a scale factor that is the ratio of the distance to
+// the given x, y from the given centre, over the given maximum distance.
+// This is used for rendering suppressed images of the histogram.
+func supScale(x, y int, centx, centy, maxDist float64) float64 {
+	xdist := float64(x) - centx
+	ydist := float64(y) - centy
+	hyp := math.Hypot(xdist, ydist)
+	return (hyp / maxDist)
+}
+
+// RenderSuppressed renders a suppressed version of the histogram and returns
+// the result as an 8-bit grayscale image.
+func (hist *histCore) renderSuppressedCore(rs rowSource) SippImage {
+	rnd, filterScale, _ := hist.renderInto()
+	rndWidth := rnd.Bounds().Dx()
+	rndHeight := rnd.Bounds().Dy()
+	var suppressed []float64
+	var maxSuppressed float64
+	size := int(rndWidth) * int(rndHeight)
+	suppressed = make([]float64, size)
+	centx := (float64(hist.width)-1)/2
+	centy := (float64(hist.height)-1)/2
+
+	if filterScale == 1.0 {
+		var idx int = 0
+		for row := 0; row < int(hist.height); row++ {
+			histRow := rs.rowVals(row)
+			for x, val := range histRow {
+				sscale := supScale(x, row, centx, centy, hist.grad.MaxMod)
+				suppressed[idx] = float64(val) * sscale
+				if suppressed[idx] > maxSuppressed {
+					maxSuppressed = suppressed[idx]
+				}
+				idx++
+			}
+		}
+		var pixScale float64 = 255.0 / maxSuppressed
+		//fmt.Println("Suppressed Render pixScale factor:", pixScale)
+		rndPix := rnd.Pix()
+		for index, val := range suppressed {
+			rndPix[index] = uint8(val * pixScale)
+		}
+	} else {
+		// Scale while rendering
+	}
+	return rnd
 }
 
 // setupInvertedBins populates the invertedBins map for the given histogram.
@@ -190,4 +307,34 @@ func setupInvertedBins(bins []BinPair) (invertedBins map[uint32]int) {
 		invertedBins[val.BinVal] = index
 	}
 	return
+}
+
+// RenderSubstituteCore renders an 8-bit image of the histogram, substituting
+// the given value as the pixel value for each corresponding bin value. The
+// input slice must be the same length as the slice of bin values returned
+// by Bins, and contain new values corresponding to that order.
+// This is used to render the delentropy values of the histogram.
+// Note that as the slice returned by Bins() does not include 0 values,
+// the value to be used for empty bins must be supplied.
+func (hist *histCore) renderSubstituteCore(rs rowSource, subs []uint8, zeroVal uint8) SippImage {
+	if hist.invertedBins == nil {
+		hist.invertedBins = setupInvertedBins(hist.bins)
+	}
+	rnd, scale, _ := hist.renderInto()
+	rndPix := rnd.Pix()
+	if scale == 1.0  {
+		for row := 0; row < hist.height; row++ {
+			histRow := rs.rowVals(row)
+			for index, val := range histRow {
+				if val == 0 {
+					rndPix[row*hist.width+index] = zeroVal;
+				} else {
+					rndPix[row*hist.width+index]= subs[hist.invertedBins[val]]
+				}
+			}
+		}
+	} else {
+		// Scale while rendering
+	}
+	return rnd
 }

@@ -225,7 +225,8 @@ func scaleDown(src SippImage, dst *image.Gray) {
 		}
 	}
 
-	vfilter := preComputeFilter(scale, outHeight, srcHeight, 1.0)
+	scaleBpp = 1.0 // The intermediate is already 8-bit
+	vfilter := preComputeFilter(scale, outHeight, srcHeight, scaleBpp)
 
 	for outx := 0; outx < outWidth; outx++ {
 		// Apply the filter to the intermediate column, generating an output column
@@ -242,7 +243,7 @@ func scaleDown(src SippImage, dst *image.Gray) {
 
 // Set of weights to use for an output pixel
 type filter struct {
-	// Index into the source row/columb where these weights start
+	// Index into the source row/column where these weights start
 	idx int
 	// Number of pixels that contribute
 	n int
@@ -250,6 +251,9 @@ type filter struct {
 	weights []float64
 }
 
+// preComputeFilter returns a slice of filter structs, one for each output
+// pixel. The scaleBpp parameter is used to scale down 16-bit pixels to 8-bit
+// during the filtering.
 func preComputeFilter(scale float64,
 	outSize, srcSize int,
 	scaleBpp float64) []filter {
