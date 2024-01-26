@@ -28,6 +28,9 @@ func FFT(src SippImage) (fft *FFTImage) {
 	ft := sfft.NewFFT2(fft.Rect.Dy(), fft.Rect.Dx())
 	ft.FFT(fft.Pix)
 
+	// Image data have changed. Recalculate scaling values.
+	fft.SetScaling()
+
 	return fft
 }
 
