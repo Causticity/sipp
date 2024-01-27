@@ -29,33 +29,38 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 	dst = new(ComplexImage)
 	dst.Pix = cpx
 	dst.Rect = image.Rect(0, 0, width, len(cpx)/width)
-	dst.MinRe = math.MaxFloat64
-	dst.MinIm = math.MaxFloat64
-	dst.MaxRe = -math.MaxFloat64
-	dst.MaxIm = -math.MaxFloat64
-	dst.MaxMod = 0.0
-	for _, c := range cpx {
+	dst.SetScaling()
+	return
+}
+
+func (comp *ComplexImage) SetScaling() {
+	comp.MinRe = math.MaxFloat64
+	comp.MinIm = math.MaxFloat64
+	comp.MaxRe = -math.MaxFloat64
+	comp.MaxIm = -math.MaxFloat64
+	comp.MaxMod = 0.0
+	for _, c := range comp.Pix {
 		re := real(c)
 		im := imag(c)
 		modsq := re*re + im*im
 		// store the maximum squared value, then take the root afterwards
-		if modsq > dst.MaxMod {
-			dst.MaxMod = modsq
+		if modsq > comp.MaxMod {
+			comp.MaxMod = modsq
 		}
-		if re < dst.MinRe {
-			dst.MinRe = re
+		if re < comp.MinRe {
+			comp.MinRe = re
 		}
-		if re > dst.MaxRe {
-			dst.MaxRe = re
+		if re > comp.MaxRe {
+			comp.MaxRe = re
 		}
-		if im < dst.MinIm {
-			dst.MinIm = im
+		if im < comp.MinIm {
+			comp.MinIm = im
 		}
-		if im > dst.MaxIm {
-			dst.MaxIm = im
+		if im > comp.MaxIm {
+			comp.MaxIm = im
 		}
 	}
-	dst.MaxMod = math.Sqrt(dst.MaxMod)
+	comp.MaxMod = math.Sqrt(comp.MaxMod)
 
 	return
 }
@@ -85,21 +90,11 @@ func ToShiftedComplex(src SippImage) (dst *ComplexImage) {
 			dst.Pix[i] = complex(val, 0)
 			i++
 			shift = -shift
-			modsq := val*val
-			if modsq > dst.MaxMod {
-				dst.MaxMod = modsq
-			}
-			if val < dst.MinRe {
-				dst.MinRe = val
-			}
-			if val > dst.MaxRe {
-				dst.MaxRe = val
-			}
 		}
 		shiftStart = -shiftStart
 		shift = shiftStart
 	}
-	dst.MaxMod = math.Sqrt(dst.MaxMod)
+	dst.SetScaling()
 
 	return
 }
