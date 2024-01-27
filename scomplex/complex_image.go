@@ -34,13 +34,12 @@ func FromComplexArray(cpx []complex128, width int) (dst *ComplexImage) {
 }
 
 func (comp *ComplexImage) SetScaling() {
-	comp.Rect = image.Rect(0, 0, width, len(cpx)/width)
 	comp.MinRe = math.MaxFloat64
 	comp.MinIm = math.MaxFloat64
 	comp.MaxRe = -math.MaxFloat64
 	comp.MaxIm = -math.MaxFloat64
 	comp.MaxMod = 0.0
-	for _, c := range dst.Pix {
+	for _, c := range comp.Pix {
 		re := real(c)
 		im := imag(c)
 		modsq := re*re + im*im
